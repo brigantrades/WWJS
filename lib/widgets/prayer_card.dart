@@ -30,20 +30,48 @@ class PrayerCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
           child: Row(
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.sage.withValues(alpha: .13),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  '${prayer.day}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.sage,
-                    fontFamily: 'serif',
-                  ),
+              Semantics(
+                label: isCompleted
+                    ? 'Day ${prayer.day}, completed'
+                    : 'Day ${prayer.day}',
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.sage.withValues(alpha: .13),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '${prayer.day}',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.sage,
+                          fontFamily: 'serif',
+                        ),
+                      ),
+                    ),
+                    if (isCompleted)
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            color: AppColors.sage,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 16),
@@ -68,12 +96,6 @@ class PrayerCard extends StatelessWidget {
                         const Icon(Icons.schedule_rounded, size: 16),
                         const SizedBox(width: 4),
                         const Text('About 2 minutes'),
-                        if (isCompleted) ...[
-                          const SizedBox(width: 12),
-                          const Icon(Icons.check_rounded, size: 17),
-                          const SizedBox(width: 3),
-                          const Text('Prayed'),
-                        ],
                       ],
                     ),
                   ],
