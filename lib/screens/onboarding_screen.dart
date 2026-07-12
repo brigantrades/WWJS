@@ -160,7 +160,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ],
                           selected: {
-                            widget.controller.themeMode == ThemeMode.dark
+                            widget.controller.themeMode == ThemeMode.dark ||
+                                    (widget.controller.themeMode ==
+                                            ThemeMode.system &&
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark)
                                 ? ThemeMode.dark
                                 : ThemeMode.light,
                           },
