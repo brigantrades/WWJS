@@ -17,13 +17,12 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _setReminder = false;
-  int _startingDay = 1;
   TimeOfDay _time = const TimeOfDay(hour: 7, minute: 30);
   bool _busy = false;
 
   Future<void> _begin() async {
     setState(() => _busy = true);
-    await widget.controller.finishOnboarding(startingDay: _startingDay);
+    await widget.controller.finishOnboarding(startingDay: 1);
     if (_setReminder) {
       await widget.controller.configureReminder(enabled: true, time: _time);
     }
@@ -41,7 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               Stack(
                 children: [
-                  const DawnArtwork(height: 390),
+                  const DawnArtwork(height: 350),
                   Positioned(
                     left: 24,
                     right: 24,
@@ -71,11 +70,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
               Transform.translate(
-                offset: const Offset(0, -42),
+                offset: const Offset(0, -50),
                 child: Container(
                   width: double.infinity,
                   margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.fromLTRB(24, 30, 24, 26),
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(32),
@@ -90,43 +89,87 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Column(
                     children: [
                       Text(
-                        _startingDay == 1
-                            ? 'Begin with Day 1'
-                            : 'Continue with Day $_startingDay',
+                        'Begin with Day 1',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.displayMedium,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Text(
                         'One short prayer each day. Scripture, a gentle reflection, and two quiet minutes with Jesus.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      const SizedBox(height: 24),
-                      DropdownButtonFormField<int>(
-                        initialValue: _startingDay,
-                        decoration: const InputDecoration(
-                          labelText: 'Returning to WWJS?',
-                          helperText: 'Choose the prayer day to continue from.',
-                          prefixIcon: Icon(Icons.history_rounded),
-                          border: OutlineInputBorder(),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
                         ),
-                        items: [
-                          for (
-                            var day = 1;
-                            day <= widget.controller.prayerCount;
-                            day++
-                          )
-                            DropdownMenuItem(
-                              value: day,
-                              child: Text('Day $day'),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '“Be still, and know that I am God.”',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.copyWith(height: 1.4),
                             ),
-                        ],
-                        onChanged: (day) {
-                          if (day != null) setState(() => _startingDay = day);
-                        },
+                            const SizedBox(height: 4),
+                            Text(
+                              'Psalm 46:10',
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Appearance',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<ThemeMode>(
+                          key: const ValueKey('welcome-theme-toggle'),
+                          segments: const [
+                            ButtonSegment(
+                              value: ThemeMode.light,
+                              icon: Icon(Icons.light_mode_rounded),
+                              label: Text('Light'),
+                            ),
+                            ButtonSegment(
+                              value: ThemeMode.dark,
+                              icon: Icon(Icons.dark_mode_rounded),
+                              label: Text('Dark'),
+                            ),
+                          ],
+                          selected: {
+                            widget.controller.themeMode == ThemeMode.dark
+                                ? ThemeMode.dark
+                                : ThemeMode.light,
+                          },
+                          onSelectionChanged: (selection) {
+                            widget.controller.setThemeMode(selection.first);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Remind me each day'),
@@ -147,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           icon: const Icon(Icons.schedule_rounded),
                           label: const Text('Choose your time'),
                         ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 14),
                       FilledButton.icon(
                         onPressed: _busy ? null : _begin,
                         icon: _busy
@@ -158,13 +201,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                               )
                             : const Icon(Icons.play_arrow_rounded),
-                        label: Text(
-                          _startingDay == 1
-                              ? 'Begin with Day 1'
-                              : 'Continue with Day $_startingDay',
-                        ),
+                        label: Text('Begin with Day 1'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Text(
                         'No account. No streaks. Your activity stays on this device.',
                         textAlign: TextAlign.center,
