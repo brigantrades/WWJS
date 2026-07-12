@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wwjs/app.dart';
+import 'package:wwjs/data/prayers.dart';
+import 'package:wwjs/models/prayer_content.dart';
+import 'package:wwjs/screens/today_screen.dart';
+import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
 
@@ -23,4 +27,29 @@ void main() {
     expect(find.text('Come and Rest'), findsOneWidget);
     expect(find.text('Day 1'), findsOneWidget);
   });
+
+  testWidgets('home arrows browse every published prayer day', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      contentRepository: _ReversedContentRepository(),
+    );
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await tester.pumpWidget(
+      MaterialApp(home: TodayScreen(controller: controller)),
+    );
+
+    expect(find.text('Day 1'), findsOneWidget);
+    await tester.tap(find.byTooltip('Next day'));
+    await tester.pump();
+    expect(find.text('Day 2'), findsOneWidget);
+  });
+}
+
+class _ReversedContentRepository implements ContentRepository {
+  @override
+  Future<List<PrayerContent>> fetchPublishedPrayers() async =>
+      prayers.reversed.toList();
 }

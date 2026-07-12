@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../state/app_controller.dart';
+import '../widgets/subscription_modal.dart';
 import 'commitment_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -58,8 +59,23 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        toolbarHeight: 108,
+        centerTitle: true,
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        flexibleSpace: Image.asset(
+          'assets/images/prayer-header-watercolor.png',
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          color: dark ? AppColors.darkBackground.withValues(alpha: .34) : null,
+          colorBlendMode: dark ? BlendMode.multiply : null,
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -163,6 +179,16 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          _sectionLabel(context, 'TESTING'),
+          Card(
+            child: ListTile(
+              minTileHeight: 66,
+              leading: const Icon(Icons.payments_outlined),
+              title: const Text('Show paywall'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => showSubscriptionModal(context),
             ),
           ),
           const SizedBox(height: 18),

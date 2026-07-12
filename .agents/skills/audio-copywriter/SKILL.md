@@ -28,6 +28,7 @@ Create warm, clear, reflective spoken-word scripts for the WWJS daily audio expe
 WWJS uses the ElevenLabs V2 model with SSML break tags.
 
 - Use `<break time="...s" />` for intentional pauses, matching the user's established Day 1 format.
+- Insert `<break time="1.25s" />` between every successive spoken line. Do not leave adjacent spoken lines without an explicit break; replace the 1.25-second break with a longer transition pause when the emotional or structural beat calls for one.
 - Use short pauses of roughly 1.25–1.5 seconds between reflective sentences, 2–3 seconds around Scripture and prayer transitions, and longer pauses only when emotionally necessary.
 - Do not use Eleven v3 square-bracket audio tags such as `[pause]`, `[softly]`, or `[whispers]`.
 - Include the Bible reference clearly in the spoken script before the passage.

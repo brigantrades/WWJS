@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../core/local_day.dart';
-import '../data/prayers.dart';
 import '../models/prayer_content.dart';
 import '../services/app_storage.dart';
+import '../services/content_repository.dart';
 import '../services/notification_service.dart';
 
 class AppController extends ChangeNotifier {
@@ -11,13 +11,18 @@ class AppController extends ChangeNotifier {
     AppStorage? storage,
     ReminderScheduler? reminders,
     DateTime Function()? now,
+    ContentRepository? contentRepository,
   }) : _storage = storage ?? AppStorage(),
        _reminders = reminders ?? NotificationService(),
+       _contentRepository =
+           contentRepository ?? const BundledContentRepository(),
        _now = now ?? DateTime.now;
 
   final AppStorage _storage;
   final ReminderScheduler _reminders;
+  final ContentRepository _contentRepository;
   final DateTime Function() _now;
+  List<PrayerContent> prayers = [];
 
   bool onboardingComplete = false;
   DateTime? startDate;
@@ -39,6 +44,11 @@ class AppController extends ChangeNotifier {
   PrayerContent get todaysPrayer => unlockedPrayers.last;
 
   Future<void> initialize() async {
+    prayers = [...await _contentRepository.fetchPublishedPrayers()]
+      ..sort((first, second) => first.day.compareTo(second.day));
+    if (prayers.isEmpty) {
+      throw StateError('No published prayer days were returned by Supabase.');
+    }
     final snapshot = await _storage.load();
     onboardingComplete = snapshot.onboardingComplete;
     startDate = snapshot.startDate;

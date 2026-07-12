@@ -21,8 +21,17 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final screens = [
       TodayScreen(controller: widget.controller),
-      PrayerListScreen(controller: widget.controller, favoritesOnly: false),
-      PrayerListScreen(controller: widget.controller, favoritesOnly: true),
+      PrayerListScreen(
+        controller: widget.controller,
+        favoritesOnly: false,
+        onHome: () => setState(() => _index = 0),
+      ),
+      PrayerListScreen(
+        controller: widget.controller,
+        favoritesOnly: true,
+        onExplorePrayers: () => setState(() => _index = 1),
+        onHome: () => setState(() => _index = 0),
+      ),
       SettingsScreen(controller: widget.controller),
     ];
     return Scaffold(

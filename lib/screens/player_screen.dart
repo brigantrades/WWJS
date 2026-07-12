@@ -15,10 +15,12 @@ class PlayerScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.prayer,
+    this.onHome,
   });
 
   final AppController controller;
   final PrayerContent prayer;
+  final VoidCallback? onHome;
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -51,8 +53,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _initialize() async {
     try {
       final duration = await _player.setAudioSource(
-        AudioSource.asset(
-          widget.prayer.audioAsset,
+        AudioSource.uri(
+          Uri.parse(widget.prayer.audioUrl),
           tag: MediaItem(
             id: 'prayer-${widget.prayer.day}',
             album: 'WWJS — Pray with Jesus',
@@ -120,7 +122,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
       widget.prayer.day,
       _didComplete ? Duration.zero : _position,
     );
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    widget.onHome?.call();
+    Navigator.of(context).pop();
   }
 
   Future<void> _prayAgain() async {
@@ -152,12 +156,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final playbackSection = widget.prayer.sectionAt(_position);
-    var section = playbackSection;
-    if (section.type == PrayerSectionType.preparation) {
-      section = widget.prayer.sections.firstWhere(
-        (candidate) => candidate.type == PrayerSectionType.scripture,
-      );
-    }
+    final scriptureSection = widget.prayer.sections.firstWhere(
+      (candidate) => candidate.type == PrayerSectionType.scripture,
+    );
     final favorite = widget.controller.favorites.contains(widget.prayer.day);
     final totalMs = _duration.inMilliseconds <= 0
         ? 1
@@ -177,27 +178,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
-                child: Row(
+              SizedBox(
+                height: 320,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    IconButton(
-                      tooltip: 'Leave prayer',
-                      onPressed: _leave,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 34,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: favorite
-                          ? 'Remove from favorites'
-                          : 'Add to favorites',
-                      onPressed: () =>
-                          widget.controller.toggleFavorite(widget.prayer.day),
-                      icon: Icon(
-                        favorite ? Icons.favorite : Icons.favorite_border,
+                    const DawnArtwork(height: 320, compact: true),
+                    Positioned(
+                      top: 4,
+                      left: 10,
+                      right: 10,
+                      child: Row(
+                        children: [
+                          IconButton.filledTonal(
+                            tooltip: 'Return home',
+                            onPressed: _leave,
+                            icon: const Icon(Icons.home_rounded, size: 28),
+                          ),
+                          const Spacer(),
+                          IconButton.filledTonal(
+                            tooltip: favorite
+                                ? 'Remove from favorites'
+                                : 'Add to favorites',
+                            onPressed: () => widget.controller.toggleFavorite(
+                              widget.prayer.day,
+                            ),
+                            icon: Icon(
+                              favorite ? Icons.favorite : Icons.favorite_border,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -259,43 +270,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 26),
                     child: Column(
                       children: [
-                        const SizedBox.square(
-                          dimension: 116,
-                          child: ClipOval(
-                            child: DawnArtwork(height: 116, compact: true),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 28),
                         Text(
-                          section.label.toUpperCase(),
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(
-                                color: AppColors.sage,
-                                letterSpacing: 1.8,
-                              ),
+                          scriptureSection.text,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                        const SizedBox(height: 8),
-                        Container(width: 28, height: 2, color: AppColors.sage),
                         const SizedBox(height: 14),
-                        AnimatedSwitcher(
-                          duration: MediaQuery.disableAnimationsOf(context)
-                              ? Duration.zero
-                              : const Duration(milliseconds: 350),
-                          child: Text(
-                            section.text,
-                            key: ValueKey(section.type),
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
+                        Text(
+                          widget.prayer.scriptureReference,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: AppColors.sage),
                         ),
-                        if (section.type == PrayerSectionType.scripture) ...[
-                          const SizedBox(height: 14),
-                          Text(
-                            widget.prayer.scriptureReference,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: AppColors.sage),
-                          ),
-                        ],
                         if (_readAlongEnabled)
                           AnimatedSize(
                             duration: MediaQuery.disableAnimationsOf(context)
@@ -429,19 +415,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ),
                         ),
                       const SizedBox(height: 14),
-                      Card(
-                        child: ListTile(
-                          minTileHeight: 66,
-                          onTap: _leave,
-                          leading: const Icon(
-                            Icons.cloud_outlined,
-                            color: AppColors.sage,
-                          ),
-                          title: const Text('Leave for now'),
-                          subtitle: const Text('Your progress is saved'),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                        ),
-                      ),
                     ],
                   ),
                 ),

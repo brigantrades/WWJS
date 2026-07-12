@@ -23,11 +23,14 @@ class PrayerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shadowColor: AppColors.forest.withValues(alpha: .12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           child: Row(
             children: [
               Semantics(
@@ -38,12 +41,12 @@ class PrayerCard extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 62,
+                      height: 66,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppColors.sage.withValues(alpha: .13),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: Text(
                         '${prayer.day}',
@@ -55,18 +58,18 @@ class PrayerCard extends StatelessWidget {
                     ),
                     if (isCompleted)
                       Positioned(
-                        right: -4,
-                        bottom: -4,
+                        right: -5,
+                        bottom: -5,
                         child: Container(
-                          width: 20,
-                          height: 20,
+                          width: 26,
+                          height: 26,
                           decoration: const BoxDecoration(
                             color: AppColors.sage,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.check_rounded,
-                            size: 15,
+                            size: 18,
                             color: Colors.white,
                           ),
                         ),
@@ -74,7 +77,7 @@ class PrayerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,23 +93,49 @@ class PrayerCard extends StatelessWidget {
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.sage),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         const Icon(Icons.schedule_rounded, size: 16),
                         const SizedBox(width: 4),
-                        const Text('About 2 minutes'),
+                        const Text('2 min'),
                       ],
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: isFavorite
-                    ? 'Remove from favorites'
-                    : 'Add to favorites',
-                onPressed: onFavorite,
-                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+              SizedBox(
+                width: 48,
+                height: 90,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      tooltip: isFavorite
+                          ? 'Remove from favorites'
+                          : 'Add to favorites',
+                      onPressed: onFavorite,
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          key: ValueKey(isFavorite),
+                          color: AppColors.forest,
+                        ),
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      tooltip: 'Play ${prayer.title}',
+                      onPressed: onTap,
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.sage.withValues(alpha: .18),
+                      ),
+                      icon: const Icon(Icons.play_arrow_rounded),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

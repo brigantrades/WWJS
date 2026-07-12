@@ -14,7 +14,7 @@ const prayers = <PrayerContent>[
     responsePrayer:
         'Jesus, I give you what I cannot carry today. Quiet my heart. Renew my strength. Help me trust that I am not alone.',
     closingText: 'Rest here for a moment. Amen.',
-    audioAsset: 'assets/audio/day_001.mp3',
+    audioUrl: 'https://example.invalid/day_001.m4a',
     estimatedDuration: Duration(minutes: 2),
     hasProductionAudio: true,
     sections: [
@@ -67,7 +67,7 @@ const prayers = <PrayerContent>[
     responsePrayer:
         'Jesus, receive what troubles me. Teach me to live from your peace instead of my fear.',
     closingText: 'Carry my peace with you. Amen.',
-    audioAsset: 'assets/audio/day_002.mp3',
+    audioUrl: 'https://example.invalid/day_002.m4a',
     estimatedDuration: Duration(minutes: 2),
     hasProductionAudio: true,
     sections: [
@@ -119,7 +119,7 @@ const prayers = <PrayerContent>[
     responsePrayer:
         'Jesus, keep me close to you. Let my life grow from your love and not from anxious striving.',
     closingText: 'Remain in my love. Amen.',
-    audioAsset: 'assets/audio/day_003.mp3',
+    audioUrl: 'https://example.invalid/day_003.m4a',
     estimatedDuration: Duration(minutes: 2),
     hasProductionAudio: true,
     sections: [
@@ -171,7 +171,7 @@ const prayers = <PrayerContent>[
     responsePrayer:
         'Jesus, remind me that I belong to you. Give me courage for what I face, and help me notice your presence with me.',
     closingText: 'You are mine. Walk in peace. Amen.',
-    audioAsset: 'assets/audio/day_004.mp3',
+    audioUrl: 'https://example.invalid/day_004.m4a',
     estimatedDuration: Duration(minutes: 2),
     hasProductionAudio: true,
     sections: [
@@ -222,7 +222,7 @@ const prayers = <PrayerContent>[
     responsePrayer:
         'Jesus, renew my mind and shape my choices today. Show me one small way to love you and the people around me.',
     closingText: 'Take the next faithful step. Amen.',
-    audioAsset: 'assets/audio/day_005_placeholder.mp3',
+    audioUrl: 'https://example.invalid/day_005.m4a',
     estimatedDuration: Duration(minutes: 2),
     sections: [
       PrayerSection(
@@ -255,6 +255,110 @@ const prayers = <PrayerContent>[
         type: PrayerSectionType.closing,
         label: 'Amen',
         text: 'Take the next faithful step. Amen.',
+        startsAt: Duration(seconds: 84),
+      ),
+    ],
+  ),
+  PrayerContent(
+    day: 6,
+    title: 'Love God and Your Neighbor',
+    scriptureReference: 'Luke 10:27',
+    scriptureText:
+        '“You shall love the Lord your God with all your heart, with all your soul, with all your strength, and with all your mind; and your neighbor as yourself.”',
+    preparationText:
+        'Become still for a moment. Receive the love of God before thinking about what you need to do.',
+    reflectionText:
+        'Love begins by staying close to me, then allowing that love to reach the person in front of you. You do not need a grand gesture. Offer your attention, your patience, or one small act of kindness. Let love become practical today.',
+    responsePrayer:
+        'Jesus, teach me to love you with my whole life and to love the people around me with patience, courage, and kindness.',
+    closingText: 'Go and let love become visible. Amen.',
+    audioUrl: 'https://example.invalid/day_006.m4a',
+    estimatedDuration: Duration(minutes: 2),
+    hasProductionAudio: true,
+    sections: [
+      PrayerSection(
+        type: PrayerSectionType.preparation,
+        label: 'Be present',
+        text: 'Become still for a moment. Receive the love of God.',
+        startsAt: Duration.zero,
+      ),
+      PrayerSection(
+        type: PrayerSectionType.scripture,
+        label: 'Scripture',
+        text:
+            'Love the Lord your God with your whole being, and love your neighbor as yourself.',
+        startsAt: Duration(seconds: 18),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.reflection,
+        label: 'Jesus speaks',
+        text:
+            'Love begins by staying close to me, then allowing that love to reach the person in front of you.',
+        startsAt: Duration(seconds: 32),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.response,
+        label: 'Your prayer',
+        text:
+            'Jesus, teach me to love you with my whole life and to love the people around me well.',
+        startsAt: Duration(seconds: 67),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.closing,
+        label: 'Amen',
+        text: 'Go and let love become visible. Amen.',
+        startsAt: Duration(seconds: 84),
+      ),
+    ],
+  ),
+  PrayerContent(
+    day: 7,
+    title: 'He Restores My Soul',
+    scriptureReference: 'Psalm 23:1–3',
+    scriptureText:
+        '“Yahweh is my shepherd: I shall lack nothing. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He guides me in the paths of righteousness for his name’s sake.”',
+    preparationText:
+        'Let this be a moment of rest. Breathe slowly, and allow yourself to be cared for by God.',
+    reflectionText:
+        'You are not walking alone. I know when you need green pastures, still waters, and a restored soul. Let me lead you without hurry. Rest is not a failure to move forward. It is part of how I renew you for the path ahead.',
+    responsePrayer:
+        'Jesus, be my shepherd. Lead me into your rest, restore what has become weary, and guide me on the path ahead.',
+    closingText: 'Rest in my care. I will lead you. Amen.',
+    audioUrl: 'https://example.invalid/day_007.m4a',
+    estimatedDuration: Duration(minutes: 2),
+    hasProductionAudio: true,
+    sections: [
+      PrayerSection(
+        type: PrayerSectionType.preparation,
+        label: 'Be still',
+        text: 'Let this be a moment of rest. Allow yourself to be cared for.',
+        startsAt: Duration.zero,
+      ),
+      PrayerSection(
+        type: PrayerSectionType.scripture,
+        label: 'Scripture',
+        text:
+            'He leads me beside still waters. He restores my soul. He guides me in right paths.',
+        startsAt: Duration(seconds: 18),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.reflection,
+        label: 'Jesus speaks',
+        text:
+            'You are not walking alone. Let me lead you without hurry and restore what has become weary.',
+        startsAt: Duration(seconds: 32),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.response,
+        label: 'Your prayer',
+        text:
+            'Jesus, be my shepherd. Lead me into your rest and guide me on the path ahead.',
+        startsAt: Duration(seconds: 67),
+      ),
+      PrayerSection(
+        type: PrayerSectionType.closing,
+        label: 'Amen',
+        text: 'Rest in my care. I will lead you. Amen.',
         startsAt: Duration(seconds: 84),
       ),
     ],
