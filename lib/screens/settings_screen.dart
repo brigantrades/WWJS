@@ -2,14 +2,43 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
+import '../services/app_update_service.dart';
 import '../state/app_controller.dart';
 import '../widgets/subscription_modal.dart';
+import '../widgets/update_modal.dart';
 import 'commitment_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key, required this.controller});
+  const SettingsScreen({
+    super.key,
+    required this.controller,
+    this.updateService,
+  });
 
   final AppController controller;
+  final AppUpdateService? updateService;
+
+  Future<void> _showTestUpdateModal(BuildContext context) async {
+    final action = await showUpdateModal(context);
+    if (action != UpdateModalAction.update || !context.mounted) return;
+
+    final service = updateService;
+    if (service == null) return;
+    try {
+      final opened = await service.openConfiguredStore();
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open the update page.')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open the update page.')),
+        );
+      }
+    }
+  }
 
   Future<void> _chooseCurrentDay(BuildContext context) async {
     final selected = await showDialog<int>(
@@ -183,12 +212,24 @@ class SettingsScreen extends StatelessWidget {
           ),
           _sectionLabel(context, 'TESTING'),
           Card(
-            child: ListTile(
-              minTileHeight: 66,
-              leading: const Icon(Icons.payments_outlined),
-              title: const Text('Show paywall'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => showSubscriptionModal(context),
+            child: Column(
+              children: [
+                ListTile(
+                  minTileHeight: 66,
+                  leading: const Icon(Icons.payments_outlined),
+                  title: const Text('Show paywall'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showSubscriptionModal(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  minTileHeight: 66,
+                  leading: const Icon(Icons.system_update_alt_rounded),
+                  title: const Text('Show update modal'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => _showTestUpdateModal(context),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 18),

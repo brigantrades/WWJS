@@ -177,8 +177,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Remind me each day'),
-                        subtitle: Text(formatTime(_time)),
+                        subtitle: Text(
+                          _setReminder ? formatTime(_time) : 'Off',
+                        ),
                         value: _setReminder,
+                        activeThumbColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
+                        activeTrackColor: Theme.of(context).colorScheme.primary,
+                        inactiveThumbColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant,
+                        inactiveTrackColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        trackOutlineColor: WidgetStatePropertyAll(
+                          Theme.of(context).colorScheme.outline,
+                        ),
                         onChanged: (value) =>
                             setState(() => _setReminder = value),
                       ),

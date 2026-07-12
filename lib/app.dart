@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'screens/app_shell.dart';
 import 'screens/onboarding_screen.dart';
+import 'services/app_update_service.dart';
 import 'state/app_controller.dart';
 
 class WWJSApp extends StatelessWidget {
-  const WWJSApp({super.key, required this.controller});
+  const WWJSApp({super.key, required this.controller, this.updateService});
 
   final AppController controller;
+  final AppUpdateService? updateService;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class WWJSApp extends StatelessWidget {
             );
           },
           home: controller.onboardingComplete
-              ? AppShell(controller: controller)
+              ? AppShell(controller: controller, updateService: updateService)
               : OnboardingScreen(controller: controller),
         );
       },

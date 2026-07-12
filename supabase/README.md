@@ -16,3 +16,14 @@
    ```
 
 Never put a secret or service-role key in the Flutter app.
+
+## Update prompt
+
+`app_update_config` controls the update modal per platform. Set
+`latest_build` to the build number available to testers or customers. Builds
+below that number see the prompt on startup. `Maybe later` snoozes the same
+update for 24 hours.
+
+For iOS internal testing, replace the placeholder `store_url` with the app's
+TestFlight public invitation link if one is available. Before production,
+replace it with the final App Store listing URL.

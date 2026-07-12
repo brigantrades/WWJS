@@ -371,18 +371,31 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 ? null
                                 : _togglePlayback,
                             icon: _loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
+                                ? CircularProgressIndicator(
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.forest
+                                        : Colors.white,
                                   )
                                 : Icon(
                                     _playing
                                         ? Icons.pause_rounded
                                         : Icons.play_arrow_rounded,
+                                    size: 28,
                                   ),
                             style: IconButton.styleFrom(
-                              minimumSize: const Size(82, 82),
-                              backgroundColor: AppColors.forest,
-                              foregroundColor: Colors.white,
+                              minimumSize: const Size(68, 68),
+                              backgroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.warmWhite
+                                  : AppColors.forest,
+                              foregroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.forest
+                                  : Colors.white,
                             ),
                           ),
                           const SizedBox(width: 26),
@@ -426,23 +439,79 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Widget _skipIcon({required bool forward}) {
-    return SizedBox.square(
-      dimension: 40,
+    final color =
+        IconTheme.of(context).color ?? Theme.of(context).colorScheme.onSurface;
+    return SizedBox(
+      width: 44,
+      height: 40,
       child: Stack(
-        alignment: Alignment.center,
         children: [
-          Transform.flip(
-            flipX: forward,
-            child: const Icon(Icons.replay_rounded, size: 40),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _SkipArrowPainter(forward: forward, color: color),
+            ),
           ),
-          const Text(
-            '15',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+          Positioned(
+            bottom: 1,
+            left: forward ? null : 5,
+            right: forward ? 5 : null,
+            child: Text(
+              '15',
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                height: 1,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _SkipArrowPainter extends CustomPainter {
+  const _SkipArrowPainter({required this.forward, required this.color});
+
+  final bool forward;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (forward) {
+      canvas
+        ..translate(size.width, 0)
+        ..scale(-1, 1);
+    }
+
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round;
+    final arrow = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final curve = Path()
+      ..moveTo(14, 8)
+      ..lineTo(21, 8)
+      ..cubicTo(34, 8, 40, 17, 37, 29)
+      ..cubicTo(36, 32, 34, 34, 31, 35);
+    canvas.drawPath(curve, stroke);
+
+    final arrowHead = Path()
+      ..moveTo(10, 8)
+      ..lineTo(18, 2.5)
+      ..lineTo(18, 13.5)
+      ..close();
+    canvas.drawPath(arrowHead, arrow);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SkipArrowPainter oldDelegate) =>
+      forward != oldDelegate.forward || color != oldDelegate.color;
 }
 
 class _ReadAlongText extends StatelessWidget {

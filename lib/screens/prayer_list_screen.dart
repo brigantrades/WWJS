@@ -233,7 +233,7 @@ class _FavoriteEmptyState extends StatelessWidget {
             iconAlignment: IconAlignment.end,
             icon: const Icon(Icons.chevron_right_rounded),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.forest,
+              foregroundColor: Theme.of(context).colorScheme.primary,
               textStyle: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
