@@ -32,6 +32,7 @@ void main() {
     expect(find.text('Day 1'), findsOneWidget);
     expect(find.text('What Would Jesus Say?'), findsOneWidget);
     expect(find.text('Pray with Jesus'), findsNothing);
+    expect(find.text('PRAY WITH JESUS'), findsOneWidget);
   });
 
   testWidgets('home arrows browse every published prayer day', (tester) async {

@@ -167,7 +167,19 @@ class _TodayScreenState extends State<TodayScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 10),
+                              Text(
+                                'PRAY WITH JESUS',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.6,
+                                    ),
+                              ),
+                              const SizedBox(height: 6),
                               Text(
                                 prayer.title,
                                 textAlign: TextAlign.center,
