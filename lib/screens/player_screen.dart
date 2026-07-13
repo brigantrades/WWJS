@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../core/app_theme.dart';
+import '../core/audio_source_candidates.dart';
 import '../core/formatters.dart';
 import '../models/prayer_content.dart';
 import '../state/app_controller.dart';
@@ -54,17 +55,33 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _initialize() async {
     try {
-      final duration = await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(widget.prayer.audioUrl),
-          tag: MediaItem(
-            id: 'prayer-${widget.prayer.day}',
-            album: 'WWJS: What Would Jesus Say?',
-            title: 'Day ${widget.prayer.day}: ${widget.prayer.title}',
-            displaySubtitle: widget.prayer.scriptureReference,
-          ),
-        ),
+      final mediaItem = MediaItem(
+        id: 'prayer-${widget.prayer.day}',
+        album: 'WWJS: What Would Jesus Say?',
+        title: 'Day ${widget.prayer.day}: ${widget.prayer.title}',
+        displaySubtitle: widget.prayer.scriptureReference,
       );
+      Duration? duration;
+      Object? lastError;
+      StackTrace? lastStackTrace;
+      var loaded = false;
+
+      for (final uri in audioSourceCandidates(widget.prayer.audioUrl)) {
+        try {
+          duration = await _player.setAudioSource(
+            AudioSource.uri(uri, tag: mediaItem),
+          );
+          loaded = true;
+          break;
+        } catch (error, stackTrace) {
+          lastError = error;
+          lastStackTrace = stackTrace;
+        }
+      }
+
+      if (!loaded) {
+        Error.throwWithStackTrace(lastError!, lastStackTrace!);
+      }
       if (_position > Duration.zero) await _player.seek(_position);
       _duration = duration ?? widget.prayer.estimatedDuration;
       _positionSubscription = _player.positionStream.listen((position) {
