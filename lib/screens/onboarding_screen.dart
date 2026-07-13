@@ -4,6 +4,7 @@ import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../state/app_controller.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/brand_wordmark.dart';
 import '../widgets/dawn_artwork.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -49,21 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         const BrandLogo(size: 62, semanticLabel: 'WWJS logo'),
                         const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'WWJS',
-                              style: Theme.of(context).textTheme.headlineMedium
-                                  ?.copyWith(
-                                    color: AppColors.forest,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const Text('Pray with Jesus'),
-                          ],
-                        ),
+                        const BrandWordmark(color: AppColors.forest),
                       ],
                     ),
                   ),
@@ -96,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'WWJS guides you through Scripture, a short reflection, and a two-minute prayer—one day at a time.',
+                        'What Would Jesus Say? (WWJS) guides you through Scripture, a short reflection, and a two-minute prayer—one day at a time.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),

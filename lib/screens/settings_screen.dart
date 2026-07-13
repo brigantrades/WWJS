@@ -201,6 +201,13 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 const ListTile(
+                  leading: Icon(Icons.info_outline_rounded),
+                  title: Text('WWJS'),
+                  subtitle: Text('What Would Jesus Say?\nPray with Jesus'),
+                  isThreeLine: true,
+                ),
+                const Divider(height: 1),
+                const ListTile(
                   leading: Icon(Icons.lock_outline_rounded),
                   title: Text('Privacy'),
                   subtitle: Text(

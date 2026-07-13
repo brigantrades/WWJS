@@ -4,6 +4,7 @@ import '../core/app_theme.dart';
 import '../models/prayer_content.dart';
 import '../state/app_controller.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/brand_wordmark.dart';
 import '../widgets/dawn_artwork.dart';
 import '../widgets/subscription_modal.dart';
 import 'player_screen.dart';
@@ -96,22 +97,9 @@ class _TodayScreenState extends State<TodayScreen> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'WWJS',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium
-                                        ?.copyWith(
-                                          color: AppColors.forest,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                  const Text('Pray with Jesus'),
-                                ],
+                              child: const BrandWordmark(
+                                color: AppColors.forest,
+                                showTagline: false,
                               ),
                             ),
                           ],

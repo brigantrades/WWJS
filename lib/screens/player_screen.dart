@@ -59,7 +59,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           Uri.parse(widget.prayer.audioUrl),
           tag: MediaItem(
             id: 'prayer-${widget.prayer.day}',
-            album: 'WWJS — Pray with Jesus',
+            album: 'WWJS: What Would Jesus Say?',
             title: 'Day ${widget.prayer.day}: ${widget.prayer.title}',
             displaySubtitle: widget.prayer.scriptureReference,
           ),

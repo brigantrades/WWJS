@@ -1,4 +1,6 @@
-# WWJS — Pray with Jesus
+# WWJS: What Would Jesus Say?
+
+**Pray with Jesus.**
 
 A private, offline-first daily prayer app for iOS and Android, built with Flutter.
 

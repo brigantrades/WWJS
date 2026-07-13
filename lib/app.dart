@@ -18,7 +18,7 @@ class WWJSApp extends StatelessWidget {
       animation: controller,
       builder: (context, _) {
         return MaterialApp(
-          title: 'WWJS — Pray with Jesus',
+          title: 'WWJS: What Would Jesus Say?',
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(Brightness.light),
           darkTheme: buildAppTheme(Brightness.dark),

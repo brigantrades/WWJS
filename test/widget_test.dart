@@ -19,6 +19,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('A quiet daily rhythm with Jesus'), findsOneWidget);
+    expect(find.text('What Would Jesus Say?'), findsOneWidget);
+    expect(find.text('Pray with Jesus'), findsOneWidget);
     expect(find.text('Make it yours'), findsOneWidget);
     expect(find.text('Your journey starts here'), findsOneWidget);
     final beginButton = find.widgetWithText(FilledButton, 'Begin Day 1');
@@ -28,6 +30,8 @@ void main() {
 
     expect(find.text('Come and Rest'), findsOneWidget);
     expect(find.text('Day 1'), findsOneWidget);
+    expect(find.text('What Would Jesus Say?'), findsOneWidget);
+    expect(find.text('Pray with Jesus'), findsNothing);
   });
 
   testWidgets('home arrows browse every published prayer day', (tester) async {

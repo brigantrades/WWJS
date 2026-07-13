@@ -60,7 +60,7 @@ Do not place essential text over busy imagery without a stable contrast treatmen
 - `BrandLogo`: canonical logo presentation with semantic labeling.
 - `DawnArtwork`: top-of-screen hero, including a compact player treatment.
 - `PrayerCard`: rounded list card with a sage day tile, completion badge, semantic day status, and restrained shadow.
-- Today and onboarding: dawn artwork topped by the logo and WWJS/“Pray with Jesus” identity, followed by a rounded surface that overlaps the artwork.
+- Today and onboarding: dawn artwork topped by the logo and “WWJS” with “What Would Jesus Say?” beneath it, followed by a rounded surface that overlaps the artwork. Onboarding also shows the “Pray with Jesus” tagline; Today uses the quieter two-line wordmark.
 - Player: compact dawn hero with filled-tonal home and favorite actions, followed by the prayer and playback experience.
 - Bottom navigation: warm surface, sage translucent selection indicator, 12-point labels.
 - Subscription and update dialogs: use the existing modal components and their hierarchy before inventing a new sheet or dialog pattern.
