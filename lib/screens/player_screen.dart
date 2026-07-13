@@ -9,6 +9,7 @@ import '../core/formatters.dart';
 import '../models/prayer_content.dart';
 import '../state/app_controller.dart';
 import '../widgets/dawn_artwork.dart';
+import '../widgets/reminder_prompt_modal.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({
@@ -38,6 +39,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   bool _playing = false;
   bool _loading = true;
   bool _didComplete = false;
+  bool _completionInProgress = false;
   bool _showReadAlong = false;
   String? _error;
   int _lastSavedSecond = -1;
@@ -107,14 +109,31 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _complete() async {
-    await _player.pause();
-    if (mounted) {
-      setState(() {
-        _playing = false;
-        _didComplete = true;
-      });
+    if (_didComplete || _completionInProgress) return;
+    _completionInProgress = true;
+    final wasAlreadyCompleted = widget.controller.completed.contains(
+      widget.prayer.day,
+    );
+    try {
+      await _player.pause();
+      if (mounted) {
+        setState(() {
+          _playing = false;
+          _didComplete = true;
+        });
+      }
+      await widget.controller.markCompleted(widget.prayer.day);
+      if (!mounted) return;
+      if (shouldOfferDailyReminder(
+        completedDay: widget.prayer.day,
+        wasAlreadyCompleted: wasAlreadyCompleted,
+        reminderEnabled: widget.controller.reminderEnabled,
+      )) {
+        await showReminderPromptModal(context, controller: widget.controller);
+      }
+    } finally {
+      _completionInProgress = false;
     }
-    await widget.controller.markCompleted(widget.prayer.day);
   }
 
   Future<void> _leave() async {

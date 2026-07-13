@@ -87,60 +87,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Begin with Day 1',
+                        'A quiet daily rhythm with Jesus',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.displayMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'One short prayer each day. Scripture, a gentle reflection, and two quiet minutes with Jesus.',
+                        'WWJS guides you through Scripture, a short reflection, and a two-minute prayer—one day at a time.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 22),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
                           ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Column(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '“Be still, and know that I am God.”',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge?.copyWith(height: 1.4),
+                            Icon(
+                              Icons.tune_rounded,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Psalm 46:10',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: Theme.of(
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Make it yours',
+                                    style: Theme.of(
                                       context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    ).textTheme.titleMedium,
                                   ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Choose your appearance and daily reminder before you begin.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Appearance',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'Appearance',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
@@ -209,6 +218,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           icon: const Icon(Icons.schedule_rounded),
                           label: const Text('Choose your time'),
                         ),
+                      const SizedBox(height: 20),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Your journey starts here',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Begin with Day 1. You can change these choices anytime in Settings.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       const SizedBox(height: 14),
                       FilledButton.icon(
                         onPressed: _busy ? null : _begin,
@@ -220,7 +245,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                               )
                             : const Icon(Icons.play_arrow_rounded),
-                        label: Text('Begin with Day 1'),
+                        label: const Text('Begin Day 1'),
                       ),
                       const SizedBox(height: 8),
                       Text(

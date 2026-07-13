@@ -106,7 +106,7 @@ class PrayerCard extends StatelessWidget {
               ),
               SizedBox(
                 width: 48,
-                height: 90,
+                height: 96,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

@@ -73,13 +73,6 @@ class _AppShellState extends State<AppShell> {
       TodayScreen(controller: widget.controller),
       PrayerListScreen(
         controller: widget.controller,
-        favoritesOnly: false,
-        onHome: () => _selectTab(0),
-      ),
-      PrayerListScreen(
-        controller: widget.controller,
-        favoritesOnly: true,
-        onExplorePrayers: () => _selectTab(1),
         onHome: () => _selectTab(0),
       ),
       SettingsScreen(
@@ -107,11 +100,6 @@ class _AppShellState extends State<AppShell> {
               icon: Icon(Icons.menu_book_outlined),
               selectedIcon: Icon(Icons.menu_book),
               label: 'Prayers',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.favorite_border),
-              selectedIcon: Icon(Icons.favorite),
-              label: 'Favorites',
             ),
             NavigationDestination(
               icon: Icon(Icons.settings_outlined),

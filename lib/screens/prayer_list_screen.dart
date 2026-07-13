@@ -6,18 +6,12 @@ import '../state/app_controller.dart';
 import '../widgets/prayer_card.dart';
 import 'player_screen.dart';
 
+enum _PrayerFilter { favorites, completed }
+
 class PrayerListScreen extends StatelessWidget {
-  const PrayerListScreen({
-    super.key,
-    required this.controller,
-    required this.favoritesOnly,
-    this.onExplorePrayers,
-    this.onHome,
-  });
+  const PrayerListScreen({super.key, required this.controller, this.onHome});
 
   final AppController controller;
-  final bool favoritesOnly;
-  final VoidCallback? onExplorePrayers;
   final VoidCallback? onHome;
 
   void _open(BuildContext context, PrayerContent prayer) {
@@ -32,99 +26,128 @@ class PrayerListScreen extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final entries = favoritesOnly
-        ? controller.unlockedPrayers
-              .where((prayer) => controller.favorites.contains(prayer.day))
-              .toList()
-        : controller.unlockedPrayers.reversed.toList();
-    return Scaffold(
-      body: _GardenBackground(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 108,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                  child: Center(
-                    child: Text(
-                      favoritesOnly ? 'Favorites' : 'Prayers',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displayMedium,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: entries.isEmpty
-                    ? _EmptyPrayerList(
-                        favoritesOnly: favoritesOnly,
-                        onExplorePrayers: onExplorePrayers,
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                        itemCount: entries.length,
-                        itemBuilder: (context, index) {
-                          final prayer = entries[index];
-                          return PrayerCard(
-                            prayer: prayer,
-                            isFavorite: controller.favorites.contains(
-                              prayer.day,
-                            ),
-                            isCompleted: controller.completed.contains(
-                              prayer.day,
-                            ),
-                            onTap: () => _open(context, prayer),
-                            onFavorite: () =>
-                                controller.toggleFavorite(prayer.day),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  List<PrayerContent> _entriesFor(_PrayerFilter filter) {
+    final prayers = controller.unlockedPrayers.reversed;
+    return switch (filter) {
+      _PrayerFilter.favorites =>
+        prayers
+            .where((prayer) => controller.favorites.contains(prayer.day))
+            .toList(),
+      _PrayerFilter.completed =>
+        prayers
+            .where((prayer) => controller.completed.contains(prayer.day))
+            .toList(),
+    };
+  }
+
+  Widget _buildPrayerList(
+    BuildContext context,
+    _PrayerFilter filter, {
+    required VoidCallback onExplorePrayers,
+  }) {
+    final entries = _entriesFor(filter);
+    if (entries.isEmpty) {
+      return _EmptyPrayerList(
+        filter: filter,
+        onExplorePrayers: onExplorePrayers,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        final prayer = entries[index];
+        return PrayerCard(
+          prayer: prayer,
+          isFavorite: controller.favorites.contains(prayer.day),
+          isCompleted: controller.completed.contains(prayer.day),
+          onTap: () => _open(context, prayer),
+          onFavorite: () => controller.toggleFavorite(prayer.day),
+        );
+      },
     );
   }
-}
-
-class _GardenBackground extends StatelessWidget {
-  const _GardenBackground({required this.child});
-
-  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: dark ? AppColors.darkBackground : const Color(0xFFFCF9F2),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 250,
-            child: Image.asset(
-              'assets/images/prayer-header-watercolor.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              color: dark
-                  ? AppColors.darkBackground.withValues(alpha: .34)
-                  : null,
-              colorBlendMode: dark ? BlendMode.multiply : null,
-            ),
+    final colors = Theme.of(context).colorScheme;
+    return DefaultTabController(
+      length: _PrayerFilter.values.length,
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 108,
+          centerTitle: true,
+          title: Text(
+            'Prayers',
+            style: Theme.of(context).textTheme.displayMedium,
           ),
-          child,
-        ],
+          flexibleSpace: Image.asset(
+            'assets/images/prayer-header-watercolor.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            color: dark
+                ? AppColors.darkBackground.withValues(alpha: .34)
+                : null,
+            colorBlendMode: dark ? BlendMode.multiply : null,
+          ),
+        ),
+        body: Builder(
+          builder: (tabContext) {
+            void explorePrayers() => onHome?.call();
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.sage.withValues(alpha: .13),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: TabBar(
+                      dividerHeight: 0,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(11),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.forest.withValues(alpha: .10),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      indicatorPadding: const EdgeInsets.all(3),
+                      labelColor: colors.primary,
+                      unselectedLabelColor: colors.onSurface.withValues(
+                        alpha: .62,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Favorites'),
+                        Tab(text: 'Completed'),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      for (final filter in _PrayerFilter.values)
+                        _buildPrayerList(
+                          tabContext,
+                          filter,
+                          onExplorePrayers: explorePrayers,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -132,60 +155,73 @@ class _GardenBackground extends StatelessWidget {
 
 class _EmptyPrayerList extends StatelessWidget {
   const _EmptyPrayerList({
-    required this.favoritesOnly,
+    required this.filter,
     required this.onExplorePrayers,
   });
 
-  final bool favoritesOnly;
-  final VoidCallback? onExplorePrayers;
+  final _PrayerFilter filter;
+  final VoidCallback onExplorePrayers;
 
   @override
   Widget build(BuildContext context) {
-    if (favoritesOnly) {
-      return _FavoriteEmptyState(onExplorePrayers: onExplorePrayers);
-    }
+    return switch (filter) {
+      _PrayerFilter.favorites => _FavoriteEmptyState(
+        onExplorePrayers: onExplorePrayers,
+      ),
+      _PrayerFilter.completed => _CompletedEmptyState(
+        onExplorePrayers: onExplorePrayers,
+      ),
+    };
+  }
+}
 
+class _CompletedEmptyState extends StatelessWidget {
+  const _CompletedEmptyState({required this.onExplorePrayers});
+
+  final VoidCallback onExplorePrayers;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(32, 12, 32, 48),
+        padding: const EdgeInsets.fromLTRB(32, 24, 32, 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 94,
+              height: 94,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.dawnPeach.withValues(alpha: .12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.dawnPeach.withValues(alpha: .25),
-                    blurRadius: 38,
-                    spreadRadius: 8,
-                  ),
-                ],
+                color: AppColors.sage.withValues(alpha: .14),
               ),
               child: const Icon(
-                Icons.menu_book_outlined,
-                size: 48,
+                Icons.check_rounded,
+                size: 52,
                 color: AppColors.sage,
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 26),
             Text(
-              'Your prayers will appear here',
+              'Completed prayers\nwill appear here',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 14),
             Text(
-              'Day 1 is ready now. New prayers become available one local day at a time.',
+              'Finish a prayer to keep a simple record of your journey.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: colors.onSurface.withValues(alpha: .72),
               ),
+            ),
+            const SizedBox(height: 14),
+            TextButton.icon(
+              onPressed: onExplorePrayers,
+              label: const Text('Browse prayers'),
+              iconAlignment: IconAlignment.end,
+              icon: const Icon(Icons.chevron_right_rounded),
             ),
           ],
         ),
@@ -197,7 +233,7 @@ class _EmptyPrayerList extends StatelessWidget {
 class _FavoriteEmptyState extends StatelessWidget {
   const _FavoriteEmptyState({required this.onExplorePrayers});
 
-  final VoidCallback? onExplorePrayers;
+  final VoidCallback onExplorePrayers;
 
   @override
   Widget build(BuildContext context) {

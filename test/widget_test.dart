@@ -18,8 +18,10 @@ void main() {
     await tester.pumpWidget(WWJSApp(controller: controller));
     await tester.pumpAndSettle();
 
-    expect(find.text('Begin with Day 1'), findsWidgets);
-    final beginButton = find.widgetWithText(FilledButton, 'Begin with Day 1');
+    expect(find.text('A quiet daily rhythm with Jesus'), findsOneWidget);
+    expect(find.text('Make it yours'), findsOneWidget);
+    expect(find.text('Your journey starts here'), findsOneWidget);
+    final beginButton = find.widgetWithText(FilledButton, 'Begin Day 1');
     await tester.ensureVisible(beginButton);
     await tester.tap(beginButton);
     await tester.pumpAndSettle();

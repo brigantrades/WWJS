@@ -1,0 +1,4 @@
+interface:
+  display_name: "WWJS UI/UX Designer"
+  short_description: "Design accessible, cohesive WWJS experiences"
+  default_prompt: "Use $ui-ux-designer to design or review this WWJS interface."
