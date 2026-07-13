@@ -235,13 +235,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
               if (_didComplete)
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: MediaQuery.sizeOf(context).height - 280,
-                      ),
+                    child: Center(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
@@ -340,7 +338,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           backgroundColor: AppColors.forest,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Continue my day'),
+                        child: const Text('Return home'),
                       ),
                       const SizedBox(height: 10),
                       OutlinedButton(

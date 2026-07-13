@@ -66,6 +66,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final hasPrevious = _selectedIndex > 0;
     final hasNext = _selectedIndex < availablePrayers.length - 1;
     final favorite = controller.favorites.contains(prayer.day);
+    final completed = controller.completed.contains(prayer.day);
     final resume =
         (controller.positions[prayer.day] ?? Duration.zero) > Duration.zero;
     return Scaffold(
@@ -212,12 +213,18 @@ class _TodayScreenState extends State<TodayScreen> {
                               FilledButton.icon(
                                 onPressed: () => _openPrayer(context, prayer),
                                 icon: Icon(
-                                  resume
+                                  completed
+                                      ? Icons.replay_rounded
+                                      : resume
                                       ? Icons.play_circle_outline
                                       : Icons.play_arrow_rounded,
                                 ),
                                 label: Text(
-                                  resume ? 'Resume Prayer' : 'Begin Prayer',
+                                  completed
+                                      ? 'Pray Again'
+                                      : resume
+                                      ? 'Resume Prayer'
+                                      : 'Begin Prayer',
                                 ),
                               ),
                             ],

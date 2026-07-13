@@ -103,14 +103,16 @@ class PrayerListScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppColors.sage.withValues(alpha: .13),
+                      color: dark
+                          ? colors.surface
+                          : AppColors.sage.withValues(alpha: .13),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: TabBar(
                       dividerHeight: 0,
                       indicatorSize: TabBarIndicatorSize.tab,
                       indicator: BoxDecoration(
-                        color: colors.surface,
+                        color: dark ? AppColors.sage : colors.surface,
                         borderRadius: BorderRadius.circular(11),
                         boxShadow: [
                           BoxShadow(
@@ -121,9 +123,13 @@ class PrayerListScreen extends StatelessWidget {
                         ],
                       ),
                       indicatorPadding: const EdgeInsets.all(3),
-                      labelColor: colors.primary,
-                      unselectedLabelColor: colors.onSurface.withValues(
-                        alpha: .62,
+                      labelColor: dark ? Colors.white : colors.primary,
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      unselectedLabelColor: dark
+                          ? colors.onSurfaceVariant
+                          : colors.onSurface.withValues(alpha: .62),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w400,
                       ),
                       tabs: const [
                         Tab(text: 'Favorites'),

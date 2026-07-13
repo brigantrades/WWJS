@@ -53,6 +53,20 @@ void main() {
     await tester.pump();
     expect(find.text('Day 2'), findsOneWidget);
   });
+
+  testWidgets('home offers a completed prayer again', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.finishOnboarding();
+    await controller.markCompleted(1);
+
+    await tester.pumpWidget(
+      MaterialApp(home: TodayScreen(controller: controller)),
+    );
+
+    expect(find.text('Pray Again'), findsOneWidget);
+  });
 }
 
 class _ReversedContentRepository implements ContentRepository {

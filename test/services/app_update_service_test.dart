@@ -16,6 +16,7 @@ void main() {
       repository: _FakeRepository(update),
       packageInfoLoader: () async => _packageInfo(build: '5'),
       platform: 'android',
+      androidUpdateInvoker: _noPlayUpdate,
     );
 
     expect(await service.availableUpdate(), update);
@@ -27,6 +28,7 @@ void main() {
       repository: _FakeRepository(update),
       packageInfoLoader: () async => _packageInfo(build: '6'),
       platform: 'android',
+      androidUpdateInvoker: _noPlayUpdate,
     );
 
     expect(await service.availableUpdate(), isNull);
@@ -40,13 +42,62 @@ void main() {
       packageInfoLoader: () async => _packageInfo(build: '5'),
       platform: 'android',
       now: () => now,
+      androidUpdateInvoker: _noPlayUpdate,
     );
 
     await service.remindLater(update);
 
     expect(await service.availableUpdate(), isNull);
   });
+
+  test('uses the Google Play update when one is available', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = AppUpdateService(
+      repository: _FakeRepository(null),
+      packageInfoLoader: () async => _packageInfo(build: '6'),
+      platform: 'android',
+      androidUpdateInvoker: (method, arguments) async => {
+        'updateAvailable': true,
+        'availableVersionCode': 7,
+        'recommendedType': 'flexible',
+      },
+    );
+
+    final result = await service.availableUpdate();
+
+    expect(result?.latestBuild, 7);
+    expect(result?.nativeUpdateType, 'flexible');
+  });
+
+  test('starts the native Google Play update flow', () async {
+    var invokedMethod = '';
+    final service = AppUpdateService(
+      repository: _FakeRepository(null),
+      platform: 'android',
+      androidUpdateInvoker: (method, arguments) async {
+        invokedMethod = method;
+        return {'started': true};
+      },
+      urlLauncher: (_) async => false,
+    );
+    final playUpdate = AppUpdate(
+      platform: 'android',
+      latestBuild: 8,
+      storeUrl: Uri.parse(
+        'https://play.google.com/store/apps/details?id=com.wwjs.wwjs',
+      ),
+      nativeUpdateType: 'flexible',
+    );
+
+    expect(await service.openUpdate(playUpdate), isTrue);
+    expect(invokedMethod, 'startUpdate');
+  });
 }
+
+Future<Map<String, Object?>?> _noPlayUpdate(
+  String method,
+  Map<String, Object?>? arguments,
+) async => null;
 
 PackageInfo _packageInfo({required String build}) => PackageInfo(
   appName: 'WWJS',

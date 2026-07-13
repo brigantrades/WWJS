@@ -83,9 +83,27 @@ ThemeData buildAppTheme(Brightness brightness) {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: dark ? AppColors.darkSurface : AppColors.warmWhite,
-      indicatorColor: AppColors.sage.withValues(alpha: .18),
-      labelTextStyle: WidgetStateProperty.all(
-        TextStyle(color: scheme.onSurface, fontSize: 12),
+      indicatorColor: dark
+          ? AppColors.sage
+          : AppColors.sage.withValues(alpha: .18),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return IconThemeData(color: dark ? Colors.white : AppColors.forest);
+        }
+        return IconThemeData(
+          color: dark ? scheme.onSurfaceVariant : scheme.onSurface,
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          color: dark && !states.contains(WidgetState.selected)
+              ? scheme.onSurfaceVariant
+              : scheme.onSurface,
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w600
+              : FontWeight.w400,
+        ),
       ),
     ),
     switchTheme: SwitchThemeData(

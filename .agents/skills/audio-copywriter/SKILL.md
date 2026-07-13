@@ -18,8 +18,8 @@ Create warm, clear, reflective spoken-word scripts for the WWJS daily audio expe
 
 1. Identify the day's theme, audience, desired emotional state, and any required prayer or reflection content.
 2. Draft for speech, not for the page. Read every sentence aloud mentally and remove wording that feels formal, repetitive, or difficult to say.
-3. Shape the pacing. Use paragraph breaks for thought changes, em dashes for brief turns, and ellipses sparingly for a meaningful hesitation or reflective beat.
-4. Add ElevenLabs controls only when they improve the performance. Do not decorate every line with tags.
+3. Shape the pacing. Use paragraph breaks for thought changes, periods and commas for natural breaths, em dashes for brief turns, and ellipses only for a meaningful hesitation.
+4. Add ElevenLabs controls only at meaningful structural transitions. Do not place a break tag after every sentence or spoken line.
 5. Check the word count and estimate runtime at roughly 130–150 words per minute. Revise until the script lands near 2–3 minutes.
 6. Perform a final paste-readiness check: no title, notes, stage directions, citations, or production commentary inside the copy block.
 
@@ -27,13 +27,15 @@ Create warm, clear, reflective spoken-word scripts for the WWJS daily audio expe
 
 WWJS uses the ElevenLabs V2 model with SSML break tags.
 
-- Use `<break time="...s" />` for intentional pauses, matching the user's established Day 1 format.
-- Insert `<break time="1.25s" />` between every successive spoken line. Do not leave adjacent spoken lines without an explicit break; replace the 1.25-second break with a longer transition pause when the emotional or structural beat calls for one.
-- Use short pauses of roughly 1.25–1.5 seconds between reflective sentences, 2–3 seconds around Scripture and prayer transitions, and longer pauses only when emotionally necessary.
+- Control ordinary pacing with natural punctuation and paragraph structure first. Use `<break time="...s" />` only when a pause needs to be longer or more precise than punctuation provides.
+- Never use a break longer than 3 seconds. Use roughly 1.25–1.5 seconds for a reflective beat and 2–2.5 seconds around Scripture, prayer, or major section transitions.
+- Keep break tags sparse across the full script. Too many tags can make ElevenLabs accelerate, fade, or introduce artifacts later in a generation.
+- Do not stack several ending signals together. Avoid an ellipsis followed by a closing quotation mark and a long break, or a closing sentence followed immediately by the maximum pause, unless the recording is actually ending.
+- Present a Bible passage as one continuous quoted block with one opening quotation mark and one closing quotation mark. Do not split successive verses into separately quoted lines that each sound like an ending.
 - Do not use Eleven v3 square-bracket audio tags such as `[pause]`, `[softly]`, or `[whispers]`.
 - Include the Bible reference clearly in the spoken script before the passage.
-- Shape the spoken delivery with punctuation: short sentences, commas after natural breath points, and deliberate ellipses to slow transitions and create a comfortable reflective flow.
-- When a sentence is being delivered too quickly, split it with periods or ellipses rather than relying only on the global speed setting. For example: `Today’s Scripture is from the Gospel of John.... chapter fourteen... verse twenty-seven.`
+- Shape the spoken delivery with short sentences, commas after natural breath points, and paragraph breaks. Use ellipses sparingly because repeated ellipses can signal a fading or closing cadence.
+- When a sentence is delivered too quickly, split it into shorter sentences rather than relying only on the global speed setting or adding more SSML. For example: `Today’s Scripture is from the Gospel of John, chapter fourteen, verse twenty-seven.`
 - Apply this pacing style consistently to Scripture, reflections, and prayers while keeping the wording natural when spoken aloud.
 - Vary the opening arrival phrase from day to day. Do not begin every prayer with “Take a moment, to become still.” Keep the opening calm and simple, but choose language that fits the day's theme.
 
@@ -56,6 +58,9 @@ Before returning copy, verify:
 - It is between 280 and 420 words unless the user explicitly requests another length.
 - It can be spoken comfortably without tongue-twisters, dense clauses, or unnecessary numbers and symbols.
 - Pauses occur at emotional or structural beats and do not interrupt grammar.
+- No break exceeds 3 seconds, break tags are not used after every line, and the final quarter does not contain a denser concentration of pauses than the opening.
+- Scripture uses continuous quotation and avoids repeated closing quotation marks that could create false endings.
+- Ellipses, closing punctuation, and long breaks are not stacked unintentionally.
 - The opening earns attention quickly and the ending feels complete.
 - The tone is consistent with WWJS: warm, thoughtful, hopeful, and practical.
 - The copy contains no unsupported claims, accidental repetition, meta-language, or instructions intended for the human editor.
