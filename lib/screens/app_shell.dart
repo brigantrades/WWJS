@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_theme.dart';
 import '../services/app_update_service.dart';
 import '../state/app_controller.dart';
 import '../widgets/update_modal.dart';
@@ -17,20 +18,41 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _index = 0;
   final List<int> _tabHistory = [];
+  bool _checkingForUpdate = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    WidgetsBinding.instance.addObserver(this);
+    _scheduleUpdateCheck();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _scheduleUpdateCheck();
+  }
+
+  void _scheduleUpdateCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkForUpdate();
+    });
   }
 
   Future<void> _checkForUpdate() async {
+    if (_checkingForUpdate) return;
     final service = widget.updateService;
     if (service == null) return;
 
+    _checkingForUpdate = true;
     try {
       final update = await service.availableUpdate();
       if (!mounted || update == null) return;
@@ -48,8 +70,11 @@ class _AppShellState extends State<AppShell> {
       } else if (action == UpdateModalAction.later) {
         await service.remindLater(update);
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
       // An update check must never prevent the app from opening.
+      debugPrint('App update check failed: $error\n$stackTrace');
+    } finally {
+      _checkingForUpdate = false;
     }
   }
 
@@ -69,6 +94,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final semantic = AppSemanticColors.of(context);
     final screens = [
       TodayScreen(controller: widget.controller),
       PrayerListScreen(
@@ -87,26 +113,31 @@ class _AppShellState extends State<AppShell> {
       },
       child: Scaffold(
         body: IndexedStack(index: _index, children: screens),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _selectTab,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.wb_sunny_outlined),
-              selectedIcon: Icon(Icons.wb_sunny),
-              label: 'Today',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
-              label: 'Prayers',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
-          ],
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: semantic.subtleBorder)),
+          ),
+          child: NavigationBar(
+            selectedIndex: _index,
+            onDestinationSelected: _selectTab,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.wb_sunny_outlined),
+                selectedIcon: Icon(Icons.wb_sunny),
+                label: 'Today',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book),
+                label: 'Prayers',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
+            ],
+          ),
         ),
       ),
     );

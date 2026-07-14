@@ -1,0 +1,4 @@
+interface:
+  display_name: "WWJS Bible Expert"
+  short_description: "Verify Scripture and hopeful devotional tone"
+  default_prompt: "Use $bible-expert to verify this WWJS prayer’s Scripture, theology, and hopeful takeaway."

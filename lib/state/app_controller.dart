@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/local_day.dart';
@@ -5,6 +7,7 @@ import '../models/prayer_content.dart';
 import '../services/app_storage.dart';
 import '../services/content_repository.dart';
 import '../services/notification_service.dart';
+import '../services/prayer_audio_session.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -12,6 +15,7 @@ class AppController extends ChangeNotifier {
     ReminderScheduler? reminders,
     DateTime Function()? now,
     ContentRepository? contentRepository,
+    this.audioSession,
   }) : _storage = storage ?? AppStorage(),
        _reminders = reminders ?? NotificationService(),
        _contentRepository =
@@ -22,6 +26,7 @@ class AppController extends ChangeNotifier {
   final ReminderScheduler _reminders;
   final ContentRepository _contentRepository;
   final DateTime Function() _now;
+  final PrayerAudioSession? audioSession;
   List<PrayerContent> prayers = [];
 
   bool onboardingComplete = false;
@@ -71,6 +76,16 @@ class AppController extends ChangeNotifier {
       );
       await _storage.saveHighestUnlocked(highestUnlockedDay);
     }
+    await preloadTodayAudio();
+  }
+
+  Future<void> preloadTodayAudio() async {
+    if (audioSession == null || prayers.isEmpty) return;
+    try {
+      await audioSession!.prepare(todaysPrayer);
+    } catch (_) {
+      // The player screen presents audio errors and can retry preparation.
+    }
   }
 
   Future<void> finishOnboarding({int startingDay = 1}) async {
@@ -81,6 +96,7 @@ class AppController extends ChangeNotifier {
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
     notifyListeners();
+    unawaited(preloadTodayAudio());
   }
 
   Future<void> setCurrentDay(int selectedDay) async {
@@ -90,6 +106,7 @@ class AppController extends ChangeNotifier {
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
     notifyListeners();
+    unawaited(preloadTodayAudio());
   }
 
   Future<void> toggleFavorite(int day) async {
@@ -164,5 +181,12 @@ class AppController extends ChangeNotifier {
     themeMode = ThemeMode.system;
     textScale = 1;
     notifyListeners();
+    unawaited(preloadTodayAudio());
+  }
+
+  @override
+  void dispose() {
+    if (audioSession != null) unawaited(audioSession!.dispose());
+    super.dispose();
   }
 }

@@ -91,11 +91,23 @@ class AppUpdateService {
     if (currentBuild == null) return null;
 
     AppUpdate? update;
+    var suppliedByGooglePlay = false;
     if (platform == 'android') {
       update = await _androidPlayUpdate();
+      suppliedByGooglePlay = update != null;
     }
-    update ??= await _repository.fetchForPlatform(platform);
-    if (update == null || update.latestBuild <= currentBuild) return null;
+    if (update == null) {
+      try {
+        update = await _repository.fetchForPlatform(platform);
+      } catch (error, stackTrace) {
+        debugPrint('App update fallback lookup failed: $error\n$stackTrace');
+        return null;
+      }
+    }
+    if (update == null) return null;
+    if (!suppliedByGooglePlay && update.latestBuild <= currentBuild) {
+      return null;
+    }
 
     final preferences = await SharedPreferences.getInstance();
     final snoozedBuild = preferences.getInt(_snoozedBuildKey);
@@ -152,7 +164,8 @@ class AppUpdateService {
       final result = await _androidUpdateInvoker(
         'checkForUpdate',
         null,
-      ).timeout(const Duration(seconds: 4));
+      ).timeout(const Duration(seconds: 8));
+      debugPrint('Google Play update response: $result');
       if (result?['updateAvailable'] != true) return null;
       final latestBuild = int.tryParse(
         result?['availableVersionCode']?.toString() ?? '',
@@ -166,7 +179,8 @@ class AppUpdateService {
             ? 'immediate'
             : 'flexible',
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Google Play update lookup failed: $error\n$stackTrace');
       return null;
     }
   }

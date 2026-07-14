@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../core/app_theme.dart';
-import '../core/audio_source_candidates.dart';
 import '../core/formatters.dart';
 import '../models/prayer_content.dart';
+import '../services/prayer_audio_session.dart';
 import '../state/app_controller.dart';
 import '../widgets/dawn_artwork.dart';
+import '../widgets/light_from_above_surface.dart';
 import '../widgets/reminder_prompt_modal.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -31,7 +31,9 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   static const bool _readAlongEnabled = false;
 
-  final AudioPlayer _player = AudioPlayer();
+  late final PrayerAudioSession _audioSession;
+  late final bool _ownsAudioSession;
+  AudioPlayer get _player => _audioSession.player;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   StreamSubscription<PlayerState>? _stateSubscription;
@@ -48,6 +50,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   void initState() {
     super.initState();
+    _ownsAudioSession = widget.controller.audioSession == null;
+    _audioSession = widget.controller.audioSession ?? PrayerAudioSession();
     _position = widget.controller.positions[widget.prayer.day] ?? Duration.zero;
     _duration = widget.prayer.estimatedDuration;
     _initialize();
@@ -55,33 +59,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _initialize() async {
     try {
-      final mediaItem = MediaItem(
-        id: 'prayer-${widget.prayer.day}',
-        album: 'WWJS: What Would Jesus Say?',
-        title: 'Day ${widget.prayer.day}: ${widget.prayer.title}',
-        displaySubtitle: widget.prayer.scriptureReference,
-      );
-      Duration? duration;
-      Object? lastError;
-      StackTrace? lastStackTrace;
-      var loaded = false;
-
-      for (final uri in audioSourceCandidates(widget.prayer.audioUrl)) {
-        try {
-          duration = await _player.setAudioSource(
-            AudioSource.uri(uri, tag: mediaItem),
-          );
-          loaded = true;
-          break;
-        } catch (error, stackTrace) {
-          lastError = error;
-          lastStackTrace = stackTrace;
-        }
-      }
-
-      if (!loaded) {
-        Error.throwWithStackTrace(lastError!, lastStackTrace!);
-      }
+      final duration = await _audioSession.prepare(widget.prayer);
       if (_position > Duration.zero) await _player.seek(_position);
       _duration = duration ?? widget.prayer.estimatedDuration;
       _positionSubscription = _player.positionStream.listen((position) {
@@ -154,6 +132,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _leave() async {
+    await _player.pause();
     await widget.controller.savePosition(
       widget.prayer.day,
       _didComplete ? Duration.zero : _position,
@@ -185,12 +164,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _didComplete ? Duration.zero : _position,
       ),
     );
-    unawaited(_player.dispose());
+    if (_ownsAudioSession) unawaited(_audioSession.dispose());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final playbackButtonBackground = dark
+        ? AppColors.warmWhite
+        : AppColors.forest;
+    final playbackButtonForeground = dark ? AppColors.forest : Colors.white;
     final playbackSection = widget.prayer.sectionAt(_position);
     final scriptureSection = widget.prayer.sections.firstWhere(
       (candidate) => candidate.type == PrayerSectionType.scripture,
@@ -211,262 +195,322 @@ class _PlayerScreenState extends State<PlayerScreen> {
         if (!didPop) _leave();
       },
       child: Scaffold(
-        body: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 320,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const DawnArtwork(height: 320, compact: true),
-                    Positioned(
-                      top: 4,
-                      left: 10,
-                      right: 10,
-                      child: Row(
-                        children: [
-                          IconButton.filledTonal(
-                            tooltip: 'Return home',
-                            onPressed: _leave,
-                            icon: const Icon(Icons.home_rounded, size: 28),
-                          ),
-                          const Spacer(),
-                          IconButton.filledTonal(
-                            tooltip: favorite
-                                ? 'Remove from favorites'
-                                : 'Add to favorites',
-                            onPressed: () => widget.controller.toggleFavorite(
-                              widget.prayer.day,
-                            ),
-                            icon: Icon(
-                              favorite ? Icons.favorite : Icons.favorite_border,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final mediaQuery = MediaQuery.of(context);
+            final dark = Theme.of(context).brightness == Brightness.dark;
+            final heroHeight = (constraints.maxHeight * 0.39).clamp(
+              210.0,
+              350.0,
+            );
+            final glowEndY = (heroHeight + constraints.maxHeight * 0.34).clamp(
+              heroHeight,
+              constraints.maxHeight * 0.76,
+            );
+
+            return Stack(
+              children: [
+                LightFromAboveSurface(
+                  glowOriginY: heroHeight - 96,
+                  glowEndY: glowEndY,
                 ),
-              ),
-              if (_didComplete)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 84,
-                            height: 84,
-                            decoration: BoxDecoration(
-                              color: AppColors.sage.withValues(alpha: 0.14),
-                              shape: BoxShape.circle,
+                SafeArea(
+                  top: false,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: heroHeight,
+                        width: double.infinity,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black,
+                                  Colors.black,
+                                  Colors.transparent,
+                                ],
+                                stops: [0, 0.7, 1],
+                              ).createShader(bounds),
+                              blendMode: BlendMode.dstIn,
+                              child: DawnArtwork(
+                                height: heroHeight,
+                                compact: true,
+                                useDarkArtwork: dark,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.check_rounded,
-                              size: 44,
-                              color: AppColors.sage,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'DAY ${widget.prayer.day} COMPLETE',
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(
-                                  color: AppColors.sage,
-                                  letterSpacing: 1.6,
-                                ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            'Go in peace',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            'Carry this moment with you today. Jesus is with you in whatever comes next.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 26),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 28),
-                        Text(
-                          scriptureSection.text,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          widget.prayer.scriptureReference,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AppColors.sage),
-                        ),
-                        if (_readAlongEnabled)
-                          AnimatedSize(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 250),
-                            child: _showReadAlong
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 14),
-                                    child: _ReadAlongText(
-                                      text: widget.prayer.transcriptFor(
-                                        playbackSection.type,
-                                      ),
-                                      position: _position,
-                                      startsAt: playbackSection.startsAt,
-                                      endsAt: sectionEnd,
+                            LightFromAboveHeroTransition(dark: dark),
+                            Positioned(
+                              top: mediaQuery.padding.top + 4,
+                              left: 10,
+                              right: 10,
+                              child: Row(
+                                children: [
+                                  IconButton.filledTonal(
+                                    tooltip: 'Return home',
+                                    onPressed: _leave,
+                                    icon: const Icon(
+                                      Icons.home_rounded,
+                                      size: 28,
                                     ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 16),
-                          Text(_error!, textAlign: TextAlign.center),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              if (_didComplete)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
-                  child: Column(
-                    children: [
-                      FilledButton(
-                        onPressed: _leave,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(54),
-                          backgroundColor: AppColors.forest,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Return home'),
-                      ),
-                      const SizedBox(height: 10),
-                      OutlinedButton(
-                        onPressed: _prayAgain,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(52),
-                        ),
-                        child: const Text('Pray again'),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 18),
-                  child: Column(
-                    children: [
-                      Slider(
-                        value: value,
-                        max: totalMs.toDouble(),
-                        onChanged: _loading
-                            ? null
-                            : (next) =>
-                                  _seek(Duration(milliseconds: next.round())),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(formatDuration(_position)),
-                          Text(formatDuration(_duration)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            tooltip: 'Back 15 seconds',
-                            onPressed: () =>
-                                _seek(_position - const Duration(seconds: 15)),
-                            icon: _skipIcon(forward: false),
-                          ),
-                          const SizedBox(width: 26),
-                          IconButton.filled(
-                            tooltip: _playing ? 'Pause' : 'Play',
-                            onPressed: _loading || _error != null
-                                ? null
-                                : _togglePlayback,
-                            icon: _loading
-                                ? CircularProgressIndicator(
-                                    color:
-                                        Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? AppColors.forest
-                                        : Colors.white,
-                                  )
-                                : Icon(
-                                    _playing
-                                        ? Icons.pause_rounded
-                                        : Icons.play_arrow_rounded,
-                                    size: 28,
                                   ),
-                            style: IconButton.styleFrom(
-                              minimumSize: const Size(68, 68),
-                              backgroundColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.warmWhite
-                                  : AppColors.forest,
-                              foregroundColor:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.forest
-                                  : Colors.white,
+                                  const Spacer(),
+                                  IconButton.filledTonal(
+                                    tooltip: favorite
+                                        ? 'Remove from favorites'
+                                        : 'Add to favorites',
+                                    onPressed: () => widget.controller
+                                        .toggleFavorite(widget.prayer.day),
+                                    icon: Icon(
+                                      favorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_didComplete)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 84,
+                                    height: 84,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.sage.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.check_rounded,
+                                      size: 44,
+                                      color: AppColors.sage,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'DAY ${widget.prayer.day} COMPLETE',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: AppColors.sage,
+                                          letterSpacing: 1.6,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    'Go in peace',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.headlineMedium,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    'Carry this moment with you today. Jesus is with you in whatever comes next.',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 26),
-                          IconButton(
-                            tooltip: 'Forward 15 seconds',
-                            onPressed: () =>
-                                _seek(_position + const Duration(seconds: 15)),
-                            icon: _skipIcon(forward: true),
+                        )
+                      else
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 26),
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 28),
+                                Text(
+                                  scriptureSection.text,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineMedium,
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  widget.prayer.scriptureReference,
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(color: AppColors.sage),
+                                ),
+                                if (_readAlongEnabled)
+                                  AnimatedSize(
+                                    duration:
+                                        MediaQuery.disableAnimationsOf(context)
+                                        ? Duration.zero
+                                        : const Duration(milliseconds: 250),
+                                    child: _showReadAlong
+                                        ? Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 14,
+                                            ),
+                                            child: _ReadAlongText(
+                                              text: widget.prayer.transcriptFor(
+                                                playbackSection.type,
+                                              ),
+                                              position: _position,
+                                              startsAt:
+                                                  playbackSection.startsAt,
+                                              endsAt: sectionEnd,
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 16),
+                                  Text(_error!, textAlign: TextAlign.center),
+                                ],
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (_readAlongEnabled)
-                        Semantics(
-                          container: true,
-                          label: 'Read along',
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+                      if (_didComplete)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+                          child: Column(
                             children: [
-                              const Icon(Icons.menu_book_rounded, size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Read along'),
-                              const SizedBox(width: 8),
-                              Switch.adaptive(
-                                value: _showReadAlong,
-                                onChanged: (value) =>
-                                    setState(() => _showReadAlong = value),
+                              FilledButton(
+                                onPressed: _leave,
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(54),
+                                  backgroundColor: AppColors.forest,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Return home'),
+                              ),
+                              const SizedBox(height: 10),
+                              OutlinedButton(
+                                onPressed: _prayAgain,
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(52),
+                                ),
+                                child: const Text('Pray again'),
                               ),
                             ],
                           ),
+                        )
+                      else
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 10, 24, 18),
+                          child: Column(
+                            children: [
+                              Slider(
+                                value: value,
+                                max: totalMs.toDouble(),
+                                onChanged: _loading
+                                    ? null
+                                    : (next) => _seek(
+                                        Duration(milliseconds: next.round()),
+                                      ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(formatDuration(_position)),
+                                  Text(formatDuration(_duration)),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Back 15 seconds',
+                                    onPressed: () => _seek(
+                                      _position - const Duration(seconds: 15),
+                                    ),
+                                    icon: _skipIcon(forward: false),
+                                  ),
+                                  const SizedBox(width: 26),
+                                  IconButton.filled(
+                                    tooltip: _playing ? 'Pause' : 'Play',
+                                    onPressed: _loading || _error != null
+                                        ? null
+                                        : _togglePlayback,
+                                    icon: _loading
+                                        ? CircularProgressIndicator(
+                                            color: playbackButtonForeground,
+                                          )
+                                        : Icon(
+                                            _playing
+                                                ? Icons.pause_rounded
+                                                : Icons.play_arrow_rounded,
+                                            size: 28,
+                                          ),
+                                    style: IconButton.styleFrom(
+                                      minimumSize: const Size(68, 68),
+                                      backgroundColor: playbackButtonBackground,
+                                      disabledBackgroundColor:
+                                          playbackButtonBackground,
+                                      foregroundColor: playbackButtonForeground,
+                                      disabledForegroundColor:
+                                          playbackButtonForeground,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 26),
+                                  IconButton(
+                                    tooltip: 'Forward 15 seconds',
+                                    onPressed: () => _seek(
+                                      _position + const Duration(seconds: 15),
+                                    ),
+                                    icon: _skipIcon(forward: true),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              if (_readAlongEnabled)
+                                Semantics(
+                                  container: true,
+                                  label: 'Read along',
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.menu_book_rounded,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Read along'),
+                                      const SizedBox(width: 8),
+                                      Switch.adaptive(
+                                        value: _showReadAlong,
+                                        onChanged: (value) => setState(
+                                          () => _showReadAlong = value,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 14),
+                            ],
+                          ),
                         ),
-                      const SizedBox(height: 14),
                     ],
                   ),
                 ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

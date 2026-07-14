@@ -1,6 +1,7 @@
 package com.wwjs.wwjs
 
 import android.content.Intent
+import android.util.Log
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -15,6 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 
 private const val appUpdateChannelName = "wwjs/app_update"
 private const val updateRequestCode = 8617
+private const val appUpdateLogTag = "WWJSAppUpdate"
 
 class MainActivity : FlutterActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
@@ -62,9 +64,17 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun checkForPlayUpdate(result: MethodChannel.Result) {
+        if (!::appUpdateManager.isInitialized) {
+            result.success(noUpdate("AppUpdateManager is not initialized"))
+            return
+        }
+
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener { info -> result.success(updateInfoPayload(info)) }
-            .addOnFailureListener { result.success(noUpdate()) }
+            .addOnFailureListener { error ->
+                Log.w(appUpdateLogTag, "Google Play update lookup failed", error)
+                result.success(noUpdate(error.message))
+            }
     }
 
     private fun startPlayUpdate(requestedType: String?, result: MethodChannel.Result) {
@@ -97,6 +107,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun updateInfoPayload(info: AppUpdateInfo): Map<String, Any> {
+        val installStatus = info.installStatus()
         val flexibleAllowed = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
         val immediateAllowed = info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
         val available =
@@ -106,7 +117,16 @@ class MainActivity : FlutterActivity() {
         return mapOf(
             "updateAvailable" to available,
             "availableVersionCode" to info.availableVersionCode(),
-            "recommendedType" to if (flexibleAllowed) "flexible" else "immediate",
+            "updateAvailability" to info.updateAvailability(),
+            "installStatus" to installStatus,
+            "updatePriority" to info.updatePriority(),
+            "flexibleAllowed" to flexibleAllowed,
+            "immediateAllowed" to immediateAllowed,
+            "recommendedType" to when {
+                flexibleAllowed -> "flexible"
+                immediateAllowed -> "immediate"
+                else -> "none"
+            },
         )
     }
 
@@ -143,8 +163,12 @@ class MainActivity : FlutterActivity() {
         installStateListener = null
     }
 
-    private fun noUpdate(): Map<String, Any> = mapOf(
-        "updateAvailable" to false,
-        "recommendedType" to "none",
-    )
+    private fun noUpdate(error: String? = null): Map<String, Any> {
+        val payload = mutableMapOf<String, Any>(
+            "updateAvailable" to false,
+            "recommendedType" to "none",
+        )
+        if (!error.isNullOrBlank()) payload["error"] = error
+        return payload
+    }
 }

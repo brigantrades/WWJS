@@ -4,10 +4,12 @@ class BrandWordmark extends StatelessWidget {
   const BrandWordmark({
     super.key,
     required this.color,
+    this.secondaryColor,
     this.showTagline = true,
   });
 
   final Color color;
+  final Color? secondaryColor;
   final bool showTagline;
 
   @override
@@ -30,16 +32,17 @@ class BrandWordmark extends StatelessWidget {
             ),
             Text(
               'What Would Jesus Say?',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: color, height: 1.15),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: secondaryColor ?? color,
+                height: 1.15,
+              ),
             ),
             if (showTagline)
               Text(
                 'Pray with Jesus',
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: color),
+                ).textTheme.bodySmall?.copyWith(color: secondaryColor ?? color),
               ),
           ],
         ),

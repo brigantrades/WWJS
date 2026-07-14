@@ -15,6 +15,24 @@ flutter run
 
 Prayer content lives in `lib/data/prayers.dart`. Each entry includes its local audio asset and section timestamps.
 
+The editorial source of truth for used and future Scripture passages is
+`content/verse_plan.json`. It currently maps the opening 30-day journey, including
+the theme arc, pastoral tone, genre, and individual canonical verse IDs for every
+passage. Agents and editors must update this registry when a future passage is
+approved so selections are not left only in conversation history.
+
+Validate the plan after every editorial change:
+
+```sh
+dart run tool/verse_plan_validator.dart
+flutter test test/content/verse_plan_test.dart
+```
+
+The validator rejects duplicate days, duplicate or overlapping canonical verses,
+missing planning fields, and gaps in the planned sequence. The Flutter test also
+checks that bundled prayer titles and references match all registry entries marked
+`existing`.
+
 - `assets/audio/day_001.mp3` is the current Day 1 recording.
 - `assets/audio/day_002.mp3` is the current Day 2 recording.
 - Days 3 through 5 intentionally use silent placeholder audio while their final narration is produced.

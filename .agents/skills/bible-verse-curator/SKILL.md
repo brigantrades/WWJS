@@ -11,12 +11,27 @@ Choose Bible verses for WWJS as part of a journey, not as isolated daily quotes.
 
 Before proposing verses, inspect the current app content:
 
+- Read `content/verse_plan.json` completely. This is the canonical editorial ledger for used, approved, and planned passages.
 - Read `lib/data/prayers.dart` completely.
 - Read `lib/models/prayer_content.dart` to understand the content structure and section types.
 - Check `assets/audio/` for which days already have finished audio versus placeholders.
 - Inspect any existing README or product notes for the intended WWJS journey.
 
 Treat existing day content as authoritative. Do not overwrite, paraphrase, or contradict an existing day unless the user explicitly asks for a revision.
+
+Run `dart run tool/verse_plan_validator.dart` before recommending or approving a passage. If validation fails, resolve the registry conflict before doing further editorial work.
+
+## Canonical verse registry
+
+`content/verse_plan.json` prevents the content journey from depending on an agent's conversational memory.
+
+- Treat each value in `verse_ids` as the uniqueness key. Comparing only `scripture_reference` strings is not sufficient because differently written ranges can overlap.
+- Never recommend a passage containing a `verse_id` already assigned to another day.
+- Never change an `existing` day through the registry alone; the app content and registry must remain aligned.
+- Record future selections as `planned`. Move them through `approved`, `recorded`, and `published` as the production decision becomes real.
+- Keep `title`, theme arc, human question, emotional posture, tone, key images, relationship to the previous day, and carry-forward note current.
+- Plan future content in coherent blocks of 25–50 days. Extend the journey rather than filling isolated empty slots.
+- After any registry edit, run the validator and `flutter test test/content/verse_plan_test.dart`.
 
 ## Day-to-day progression
 
@@ -52,11 +67,20 @@ Prefer passages that:
 
 Use the smallest useful passage. A single verse is fine when it stands alone; use a short passage when context is necessary for accuracy or emotional sense. Always include book, chapter, verse range, and Bible translation.
 
+## Scripture text integrity
+
+- Verify every final Scripture quotation against an authoritative source for the recorded translation.
+- The quoted text must cover the complete registered range. If only part of a range is needed, narrow the registered reference and `verse_ids` rather than silently omitting verses.
+- Never combine translation wording, devotional paraphrase, and first-person Jesus narration inside one block labeled as Scripture.
+- Do not change the biblical speaker or pronouns to make a non-Gospel passage sound as though Jesus originally spoke it.
+- A first-person adaptation may be used in the reflection only when clearly presented as devotional application, never as a verbatim Bible quotation.
+- When an existing app entry fails these checks, flag and correct the app content before treating it as authoritative for a new audio script.
+
 ## Repetition and diversity checks
 
 Before finalizing a recommendation, compare it with the complete existing sequence:
 
-- Do not reuse a reference unless the user wants a recurring anchor passage.
+- Do not reuse or overlap any canonical verse. A recurring anchor requires an explicit user decision and a corresponding validator-policy change.
 - Avoid selecting several consecutive passages from the same book unless that continuity is intentional.
 - Track repeated concepts, images, imperatives, and emotional tones—not just identical references.
 - Balance genres over time: Gospel or narrative, wisdom, psalm, prophetic hope, epistle, and practical teaching where appropriate.
@@ -73,6 +97,8 @@ Return a compact editorial brief before drafting any final copy:
 5. **Alternatives:** provide up to two backup passages with a one-line tradeoff.
 
 When the user approves a passage, provide a short, accurate excerpt only if they supplied the text or requested a public-domain translation. Otherwise provide the reference and a paraphrase/summary for the copywriter, and ask which translation they want used in the final audio.
+
+When the user approves a passage or a planning block, update `content/verse_plan.json` in the same task and validate it. Do not leave an approved selection only in conversation text.
 
 ## Editorial guardrails
 

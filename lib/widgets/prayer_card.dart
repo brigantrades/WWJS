@@ -21,11 +21,22 @@ class PrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final semantic = AppSemanticColors.of(context);
+    final highContrast = MediaQuery.highContrastOf(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shadowColor: AppColors.forest.withValues(alpha: .12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: semantic.elevatedSurface,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: semantic.shadow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: semantic.subtleBorder,
+          width: highContrast ? 1.5 : .8,
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
@@ -33,75 +44,89 @@ class PrayerCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           child: Row(
             children: [
-              Semantics(
-                label: isCompleted
-                    ? 'Day ${prayer.day}, completed'
-                    : 'Day ${prayer.day}',
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 62,
-                      height: 66,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.sage.withValues(alpha: .13),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Text(
-                        '${prayer.day}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.sage,
-                          fontFamily: 'serif',
-                        ),
-                      ),
-                    ),
-                    if (isCompleted)
-                      Positioned(
-                        right: -5,
-                        bottom: -5,
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            color: AppColors.sage,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.check_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      prayer.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      prayer.scriptureReference,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: AppColors.sage),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.schedule_rounded, size: 16),
-                        const SizedBox(width: 4),
-                        const Text('2 min'),
-                      ],
-                    ),
-                  ],
+                child: Semantics(
+                  container: true,
+                  label: isCompleted
+                      ? 'Day ${prayer.day}, completed'
+                      : 'Day ${prayer.day}',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            prayer.title,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: semantic.primaryText),
+                          ),
+                          if (isCompleted)
+                            ExcludeSemantics(
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    WidgetSpan(
+                                      alignment: PlaceholderAlignment.middle,
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: semantic.completionSurface,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: highContrast
+                                                ? semantic.completionForeground
+                                                : semantic.subtleBorder,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.check_rounded,
+                                          size: 14,
+                                          color: semantic.completionForeground,
+                                        ),
+                                      ),
+                                    ),
+                                    const TextSpan(text: ' Completed'),
+                                  ],
+                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: semantic.scriptureText,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        prayer.scriptureReference,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: semantic.scriptureText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            size: 16,
+                            color: semantic.secondaryText,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              '2 min',
+                              style: TextStyle(color: semantic.secondaryText),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(
@@ -116,13 +141,15 @@ class PrayerCard extends StatelessWidget {
                           : 'Add to favorites',
                       onPressed: onFavorite,
                       icon: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
                         transitionBuilder: (child, animation) =>
                             ScaleTransition(scale: animation, child: child),
                         child: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           key: ValueKey(isFavorite),
-                          color: AppColors.forest,
+                          color: semantic.interactiveForeground,
                         ),
                       ),
                     ),
@@ -130,7 +157,13 @@ class PrayerCard extends StatelessWidget {
                       tooltip: 'Play ${prayer.title}',
                       onPressed: onTap,
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.sage.withValues(alpha: .18),
+                        backgroundColor: semantic.controlSurface,
+                        foregroundColor: semantic.interactiveForeground,
+                        side: BorderSide(
+                          color: highContrast
+                              ? semantic.subtleBorder
+                              : Colors.transparent,
+                        ),
                       ),
                       icon: const Icon(Icons.play_arrow_rounded),
                     ),

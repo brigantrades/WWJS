@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wwjs/app.dart';
+import 'package:wwjs/core/app_theme.dart';
 import 'package:wwjs/data/prayers.dart';
 import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/screens/today_screen.dart';
 import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
+import 'package:wwjs/widgets/brand_wordmark.dart';
 
 void main() {
   testWidgets('onboarding starts at Day 1', (tester) async {
@@ -35,7 +37,7 @@ void main() {
     expect(find.text('PRAY WITH JESUS'), findsOneWidget);
   });
 
-  testWidgets('home arrows browse every published prayer day', (tester) async {
+  testWidgets('home shows today without day navigation arrows', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final controller = AppController(
       reminders: NoopReminderScheduler(),
@@ -49,9 +51,25 @@ void main() {
     );
 
     expect(find.text('Day 1'), findsOneWidget);
-    await tester.tap(find.byTooltip('Next day'));
-    await tester.pump();
-    expect(find.text('Day 2'), findsOneWidget);
+    expect(find.byTooltip('Previous day'), findsNothing);
+    expect(find.byTooltip('Next day'), findsNothing);
+    expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+  });
+
+  testWidgets('begin prayer action has no playback icon', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await tester.pumpWidget(
+      MaterialApp(home: TodayScreen(controller: controller)),
+    );
+
+    expect(find.widgetWithText(FilledButton, 'Begin Prayer'), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+    expect(find.byIcon(Icons.play_circle_outline), findsNothing);
   });
 
   testWidgets('home offers a completed prayer again', (tester) async {
@@ -66,6 +84,46 @@ void main() {
     );
 
     expect(find.text('Pray Again'), findsOneWidget);
+  });
+
+  testWidgets('dark home matches the immersive prayer treatment', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(426, 840);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.dark),
+        home: TodayScreen(controller: controller),
+      ),
+    );
+
+    expect(
+      find.image(const AssetImage('assets/images/dawn-path-dark.png')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('dark-today-prayer-panel')), findsOneWidget);
+    expect(find.byKey(const Key('dark-today-prayer-button')), findsOneWidget);
+    expect(find.byKey(const Key('dark-today-wordmark-scrim')), findsOneWidget);
+    final wordmark = tester.widget<BrandWordmark>(find.byType(BrandWordmark));
+    expect(
+      wordmark.secondaryColor,
+      Color.lerp(
+        AppSemanticColors.dark.scriptureText,
+        AppSemanticColors.dark.primaryText,
+        .42,
+      ),
+    );
+    expect(find.widgetWithText(OutlinedButton, 'Begin Prayer'), findsOneWidget);
+    expect(find.text('PRAY WITH JESUS'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 

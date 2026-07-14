@@ -214,7 +214,7 @@ const prayers = <PrayerContent>[
     title: 'A Life That Grows',
     scriptureReference: 'Romans 12:1–2',
     scriptureText:
-        '“Be transformed by the renewing of your mind, so that you may prove what is good, well-pleasing, and perfect—the will of God.”',
+        '“Therefore I urge you, brothers, by the mercies of God, to present your bodies a living sacrifice, holy, acceptable to God, which is your spiritual service. Don’t be conformed to this world, but be transformed by the renewing of your mind, so that you may prove what is the good, well-pleasing, and perfect will of God.”',
     preparationText:
         'Become present to this moment. Ask God to show you one small step of love today.',
     reflectionText:
@@ -234,7 +234,8 @@ const prayers = <PrayerContent>[
       PrayerSection(
         type: PrayerSectionType.scripture,
         label: 'Scripture',
-        text: 'Be transformed by the renewing of your mind.',
+        text:
+            'Therefore I urge you, brothers, by the mercies of God, to present your bodies a living sacrifice, holy, acceptable to God, which is your spiritual service. Don’t be conformed to this world, but be transformed by the renewing of your mind, so that you may prove what is the good, well-pleasing, and perfect will of God.',
         startsAt: Duration(seconds: 18),
       ),
       PrayerSection(
@@ -313,52 +314,51 @@ const prayers = <PrayerContent>[
   ),
   PrayerContent(
     day: 7,
-    title: 'He Restores My Soul',
-    scriptureReference: 'Psalm 23:1–3',
+    title: 'The Joy of Giving',
+    scriptureReference: '2 Corinthians 9:6–8',
     scriptureText:
-        '“Yahweh is my shepherd: I shall lack nothing. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He guides me in the paths of righteousness for his name’s sake.”',
+        '“Remember this: he who sows sparingly will also reap sparingly. He who sows bountifully will also reap bountifully. Let each man give according as he has determined in his heart, not grudgingly or under compulsion, for God loves a cheerful giver. And God is able to make all grace abound to you, that you, always having all sufficiency in everything, may abound to every good work.”',
     preparationText:
-        'Let this be a moment of rest. Breathe slowly, and allow yourself to be cared for by God.',
+        'Open your heart to generosity. Receive God’s grace before deciding what you can give.',
     reflectionText:
-        'You are not walking alone. I know when you need green pastures, still waters, and a restored soul. Let me lead you without hurry. Rest is not a failure to move forward. It is part of how I renew you for the path ahead.',
+        'Generosity is not a bargain with God or a way to prove your worth. Give freely, wisely, and without pressure. Trust that God’s grace will provide what you need to keep doing good, and let one act of love become a source of joy and thanksgiving.',
     responsePrayer:
-        'Jesus, be my shepherd. Lead me into your rest, restore what has become weary, and guide me on the path ahead.',
-    closingText: 'Rest in my care. I will lead you. Amen.',
+        'Jesus, free me from fear and compulsion. Teach me to give wisely, freely, and joyfully, trusting your grace to guide me.',
+    closingText: 'Give with joy, and remain open to God’s care. Amen.',
     audioUrl: 'https://example.invalid/day_007.m4a',
     estimatedDuration: Duration(minutes: 2),
     hasProductionAudio: true,
     sections: [
       PrayerSection(
         type: PrayerSectionType.preparation,
-        label: 'Be still',
-        text: 'Let this be a moment of rest. Allow yourself to be cared for.',
+        label: 'Open your heart',
+        text: 'Receive God’s grace before deciding what you can give.',
         startsAt: Duration.zero,
       ),
       PrayerSection(
         type: PrayerSectionType.scripture,
         label: 'Scripture',
         text:
-            'He leads me beside still waters. He restores my soul. He guides me in right paths.',
+            'Give as you have determined in your heart, not grudgingly or under compulsion, for God loves a cheerful giver.',
         startsAt: Duration(seconds: 18),
       ),
       PrayerSection(
         type: PrayerSectionType.reflection,
         label: 'Jesus speaks',
         text:
-            'You are not walking alone. Let me lead you without hurry and restore what has become weary.',
+            'Generosity is not a bargain or a burden. Give freely and let grace shape the good you can do.',
         startsAt: Duration(seconds: 32),
       ),
       PrayerSection(
         type: PrayerSectionType.response,
         label: 'Your prayer',
-        text:
-            'Jesus, be my shepherd. Lead me into your rest and guide me on the path ahead.',
+        text: 'Jesus, teach me to give wisely, freely, and joyfully.',
         startsAt: Duration(seconds: 67),
       ),
       PrayerSection(
         type: PrayerSectionType.closing,
         label: 'Amen',
-        text: 'Rest in my care. I will lead you. Amen.',
+        text: 'Give with joy, and remain open to God’s care. Amen.',
         startsAt: Duration(seconds: 84),
       ),
     ],

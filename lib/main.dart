@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'services/content_repository.dart';
 import 'services/app_update_service.dart';
+import 'services/prayer_audio_session.dart';
 import 'state/app_controller.dart';
 
 Future<void> main() async {
@@ -30,6 +31,7 @@ Future<void> main() async {
   );
   final controller = AppController(
     contentRepository: SupabaseContentRepository(Supabase.instance.client),
+    audioSession: PrayerAudioSession(),
   );
   await controller.initialize();
   final updateService = AppUpdateService(

@@ -69,6 +69,22 @@ void main() {
     expect(result?.nativeUpdateType, 'flexible');
   });
 
+  test('trusts Google Play when it reports an available update', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = AppUpdateService(
+      repository: _FakeRepository(null),
+      packageInfoLoader: () async => _packageInfo(build: '10'),
+      platform: 'android',
+      androidUpdateInvoker: (method, arguments) async => {
+        'updateAvailable': true,
+        'availableVersionCode': 10,
+        'recommendedType': 'flexible',
+      },
+    );
+
+    expect(await service.availableUpdate(), isNotNull);
+  });
+
   test('starts the native Google Play update flow', () async {
     var invokedMethod = '';
     final service = AppUpdateService(

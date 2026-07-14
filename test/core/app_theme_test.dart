@@ -8,11 +8,17 @@ void main() {
     const selected = {WidgetState.selected};
     const unselected = <WidgetState>{};
 
-    expect(navigationTheme.indicatorColor, AppColors.sage);
-    expect(navigationTheme.iconTheme!.resolve(selected)!.color, Colors.white);
+    expect(
+      navigationTheme.indicatorColor,
+      AppSemanticColors.dark.selectedSurface,
+    );
+    expect(
+      navigationTheme.iconTheme!.resolve(selected)!.color,
+      AppSemanticColors.dark.interactiveForeground,
+    );
     expect(
       navigationTheme.iconTheme!.resolve(unselected)!.color,
-      isNot(Colors.white),
+      AppSemanticColors.dark.secondaryText,
     );
     expect(
       navigationTheme.labelTextStyle!.resolve(selected)!.fontWeight,
