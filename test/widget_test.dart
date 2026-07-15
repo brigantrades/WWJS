@@ -25,8 +25,14 @@ void main() {
     expect(find.text('Pray with Jesus'), findsOneWidget);
     expect(find.text('Make it yours'), findsOneWidget);
     expect(find.text('Your journey starts here'), findsOneWidget);
+    final setupPanelPosition = tester.widget<Transform>(
+      find.byKey(const ValueKey('welcome-setup-panel-position')),
+    );
+    expect(setupPanelPosition.transform.getTranslation().y, -50);
+    expect(find.byKey(const ValueKey('welcome-scroll-cue')), findsOneWidget);
     final beginButton = find.widgetWithText(FilledButton, 'Begin Day 1');
     await tester.ensureVisible(beginButton);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     await tester.tap(beginButton);
     await tester.pumpAndSettle();
 
@@ -35,6 +41,54 @@ void main() {
     expect(find.text('What Would Jesus Say?'), findsOneWidget);
     expect(find.text('Pray with Jesus'), findsNothing);
     expect(find.text('PRAY WITH JESUS'), findsOneWidget);
+  });
+
+  testWidgets('onboarding artwork follows the selected theme', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+
+    await tester.pumpWidget(WWJSApp(controller: controller));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.image(const AssetImage('assets/images/dawn-path.png')),
+      findsOneWidget,
+    );
+    expect(
+      find.image(const AssetImage('assets/images/dawn-path-dark.png')),
+      findsNothing,
+    );
+
+    final themeToggle = find.byKey(const ValueKey('welcome-theme-toggle'));
+    await tester.ensureVisible(themeToggle);
+    await tester.tap(
+      find.descendant(of: themeToggle, matching: find.text('Dark')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.image(const AssetImage('assets/images/dawn-path-dark.png')),
+      findsOneWidget,
+    );
+    expect(
+      find.image(const AssetImage('assets/images/dawn-path.png')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const Key('dark-onboarding-wordmark-scrim')),
+      findsOneWidget,
+    );
+    final wordmark = tester.widget<BrandWordmark>(find.byType(BrandWordmark));
+    expect(wordmark.color, AppSemanticColors.dark.primaryText);
+    expect(
+      wordmark.secondaryColor,
+      Color.lerp(
+        AppSemanticColors.dark.scriptureText,
+        AppSemanticColors.dark.primaryText,
+        .42,
+      ),
+    );
   });
 
   testWidgets('home shows today without day navigation arrows', (tester) async {

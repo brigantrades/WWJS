@@ -4,6 +4,35 @@ import 'package:wwjs/core/app_theme.dart';
 import 'package:wwjs/widgets/subscription_modal.dart';
 
 void main() {
+  group('shouldShowSubscriptionPaywall', () {
+    test('shows after day 7 is completed for the first time', () {
+      expect(
+        shouldShowSubscriptionPaywall(
+          completedDay: 7,
+          wasAlreadyCompleted: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('does not show for other days or a replay of day 7', () {
+      expect(
+        shouldShowSubscriptionPaywall(
+          completedDay: 6,
+          wasAlreadyCompleted: false,
+        ),
+        isFalse,
+      );
+      expect(
+        shouldShowSubscriptionPaywall(
+          completedDay: 7,
+          wasAlreadyCompleted: true,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets(
       'paywall keeps its branded design in ${brightness.name} theme',

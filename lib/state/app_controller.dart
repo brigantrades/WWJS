@@ -5,25 +5,31 @@ import 'package:flutter/material.dart';
 import '../core/local_day.dart';
 import '../models/prayer_content.dart';
 import '../services/app_storage.dart';
+import '../services/app_review_service.dart';
 import '../services/content_repository.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_audio_session.dart';
 
 class AppController extends ChangeNotifier {
+  static const freeDayLimit = 7;
+
   AppController({
     AppStorage? storage,
     ReminderScheduler? reminders,
     DateTime Function()? now,
     ContentRepository? contentRepository,
+    ReviewPrompter? reviewPrompter,
     this.audioSession,
   }) : _storage = storage ?? AppStorage(),
        _reminders = reminders ?? NotificationService(),
+       _reviewPrompter = reviewPrompter ?? AppReviewService(),
        _contentRepository =
            contentRepository ?? const BundledContentRepository(),
        _now = now ?? DateTime.now;
 
   final AppStorage _storage;
   final ReminderScheduler _reminders;
+  final ReviewPrompter _reviewPrompter;
   final ContentRepository _contentRepository;
   final DateTime Function() _now;
   final PrayerAudioSession? audioSession;
@@ -43,8 +49,14 @@ class AppController extends ChangeNotifier {
 
   int get prayerCount => prayers.length;
 
+  bool get hasCompletedFreeAccess => completed.contains(freeDayLimit);
+
+  int get highestAccessibleDay => hasCompletedFreeAccess
+      ? freeDayLimit.clamp(0, prayers.length)
+      : highestUnlockedDay;
+
   List<PrayerContent> get unlockedPrayers =>
-      prayers.take(highestUnlockedDay.clamp(0, prayers.length)).toList();
+      prayers.take(highestAccessibleDay.clamp(0, prayers.length)).toList();
 
   PrayerContent get todaysPrayer => unlockedPrayers.last;
 
@@ -127,6 +139,8 @@ class AppController extends ChangeNotifier {
     positions[day] = position;
     await _storage.savePositions(positions);
   }
+
+  Future<void> requestStoreReview() => _reviewPrompter.requestReview();
 
   Future<bool> configureReminder({
     required bool enabled,

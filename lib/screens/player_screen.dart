@@ -6,11 +6,13 @@ import 'package:just_audio/just_audio.dart';
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../models/prayer_content.dart';
+import '../services/app_review_service.dart';
 import '../services/prayer_audio_session.dart';
 import '../state/app_controller.dart';
 import '../widgets/dawn_artwork.dart';
 import '../widgets/light_from_above_surface.dart';
 import '../widgets/reminder_prompt_modal.dart';
+import '../widgets/subscription_modal.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({
@@ -125,6 +127,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
         reminderEnabled: widget.controller.reminderEnabled,
       )) {
         await showReminderPromptModal(context, controller: widget.controller);
+      }
+      if (!mounted) return;
+      if (shouldRequestStoreReview(
+        completedDay: widget.prayer.day,
+        wasAlreadyCompleted: wasAlreadyCompleted,
+      )) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        if (!mounted || !_didComplete) return;
+        await widget.controller.requestStoreReview();
+      }
+      if (!mounted) return;
+      if (shouldShowSubscriptionPaywall(
+        completedDay: widget.prayer.day,
+        wasAlreadyCompleted: wasAlreadyCompleted,
+      )) {
+        await showSubscriptionModal(context);
       }
     } finally {
       _completionInProgress = false;
@@ -258,6 +276,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     ),
                                   ),
                                   const Spacer(),
+                                  if (widget.controller.hasCompletedFreeAccess)
+                                    IconButton.filledTonal(
+                                      tooltip: 'Upgrade',
+                                      onPressed: () async {
+                                        await showSubscriptionModal(context);
+                                      },
+                                      icon: const Icon(Icons.lock_open_rounded),
+                                    ),
+                                  if (widget.controller.hasCompletedFreeAccess)
+                                    const SizedBox(width: 4),
                                   IconButton.filledTonal(
                                     tooltip: favorite
                                         ? 'Remove from favorites'

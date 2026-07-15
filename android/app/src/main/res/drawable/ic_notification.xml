@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Android masks notification icons to a single colour. Keep the app's
+         cross-and-path mark white on a transparent background. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10.8,2L13.2,2L13.2,5.2L16.4,5.2L16.4,7.6L13.2,7.6L13.2,12.2L10.8,12.2L10.8,7.6L7.6,7.6L7.6,5.2L10.8,5.2Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M11.2,10.8C8.5,12.2 6.8,13.5 6.8,15.1C6.8,16.8 8.8,17.6 10.5,18.3C11.7,18.8 12.2,19.2 12.2,19.8C12.2,20.5 11.1,21.4 9.5,22.4L13.9,22.4C15.5,21.2 16.5,20.1 16.5,18.8C16.5,17.1 14.5,16.3 12.8,15.6C11.6,15.1 11.1,14.7 11.1,14.2C11.1,13.5 12.4,12.6 14.3,11.6Z" />
+</vector>

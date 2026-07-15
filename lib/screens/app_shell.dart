@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../services/app_update_service.dart';
 import '../state/app_controller.dart';
+import '../widgets/subscription_modal.dart';
 import '../widgets/update_modal.dart';
+import '../widgets/upgrade_prompt.dart';
 import 'prayer_list_screen.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
@@ -113,31 +115,42 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       },
       child: Scaffold(
         body: IndexedStack(index: _index, children: screens),
-        bottomNavigationBar: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: semantic.subtleBorder)),
-          ),
-          child: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: _selectTab,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.wb_sunny_outlined),
-                selectedIcon: Icon(Icons.wb_sunny),
-                label: 'Today',
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.controller.hasCompletedFreeAccess)
+              UpgradePrompt(
+                onPressed: () async {
+                  await showSubscriptionModal(context);
+                },
               ),
-              NavigationDestination(
-                icon: Icon(Icons.menu_book_outlined),
-                selectedIcon: Icon(Icons.menu_book),
-                label: 'Prayers',
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: semantic.subtleBorder)),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Settings',
+              child: NavigationBar(
+                selectedIndex: _index,
+                onDestinationSelected: _selectTab,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.wb_sunny_outlined),
+                    selectedIcon: Icon(Icons.wb_sunny),
+                    label: 'Today',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.menu_book_outlined),
+                    selectedIcon: Icon(Icons.menu_book),
+                    label: 'Prayers',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: 'Settings',
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

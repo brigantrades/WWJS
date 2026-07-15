@@ -21,7 +21,7 @@ class NotificationService implements ReminderScheduler {
   @override
   Future<void> initialize() async {
     const settings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('ic_notification'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -86,6 +86,7 @@ class NotificationService implements ReminderScheduler {
           'daily_prayer',
           'Daily prayer reminder',
           channelDescription: 'A gentle reminder for your chosen prayer time.',
+          icon: 'ic_notification',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),

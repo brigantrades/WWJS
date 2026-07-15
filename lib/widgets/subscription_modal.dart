@@ -4,6 +4,11 @@ import 'brand_logo.dart';
 
 enum SubscriptionPlan { monthly, yearly }
 
+bool shouldShowSubscriptionPaywall({
+  required int completedDay,
+  required bool wasAlreadyCompleted,
+}) => completedDay == 7 && !wasAlreadyCompleted;
+
 Future<SubscriptionPlan?> showSubscriptionModal(BuildContext context) {
   return showDialog<SubscriptionPlan>(
     context: context,
