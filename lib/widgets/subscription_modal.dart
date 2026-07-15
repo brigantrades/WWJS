@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../services/subscription_service.dart';
 import 'brand_logo.dart';
 
 enum SubscriptionPlan { monthly, yearly }
@@ -9,11 +11,15 @@ bool shouldShowSubscriptionPaywall({
   required bool wasAlreadyCompleted,
 }) => completedDay == 7 && !wasAlreadyCompleted;
 
-Future<SubscriptionPlan?> showSubscriptionModal(BuildContext context) {
+Future<SubscriptionPlan?> showSubscriptionModal(
+  BuildContext context, {
+  SubscriptionService? subscriptionService,
+}) {
   return showDialog<SubscriptionPlan>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: .72),
-    builder: (context) => const _SubscriptionDialog(),
+    builder: (context) =>
+        _SubscriptionDialog(subscriptionService: subscriptionService),
   );
 }
 
@@ -29,7 +35,9 @@ class _PaywallColors {
 }
 
 class _SubscriptionDialog extends StatefulWidget {
-  const _SubscriptionDialog();
+  const _SubscriptionDialog({this.subscriptionService});
+
+  final SubscriptionService? subscriptionService;
 
   @override
   State<_SubscriptionDialog> createState() => _SubscriptionDialogState();
@@ -37,15 +45,91 @@ class _SubscriptionDialog extends StatefulWidget {
 
 class _SubscriptionDialogState extends State<_SubscriptionDialog> {
   SubscriptionPlan _selectedPlan = SubscriptionPlan.yearly;
+  bool _closingAfterPurchase = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.subscriptionService?.addListener(_subscriptionChanged);
+  }
+
+  void _subscriptionChanged() {
+    if (!mounted) return;
+    final service = widget.subscriptionService!;
+    if (service.isEntitled && !_closingAfterPurchase) {
+      _closingAfterPurchase = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.pop(context, _selectedPlan);
+      });
+      return;
+    }
+    setState(() {});
+  }
+
+  String get _selectedBasePlanId => _selectedPlan == SubscriptionPlan.yearly
+      ? SubscriptionService.yearlyBasePlanId
+      : SubscriptionService.monthlyBasePlanId;
+
+  Future<void> _continue() async {
+    final service = widget.subscriptionService;
+    if (service == null) {
+      Navigator.pop(context, _selectedPlan);
+      return;
+    }
+    await service.purchase(_selectedBasePlanId);
+  }
+
+  Future<void> _restore() async {
+    await widget.subscriptionService?.restorePurchases();
+  }
+
+  Future<void> _openLegalPage(String path) async {
+    await launchUrl(
+      Uri.parse('https://praywithjesus.app/$path'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.subscriptionService?.removeListener(_subscriptionChanged);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final service = widget.subscriptionService;
     final screenSize = MediaQuery.sizeOf(context);
     final dialogWidth = (screenSize.width - 32).clamp(0.0, 452.0).toDouble();
     final dialogHeight = (screenSize.height - 24).clamp(0.0, 900.0).toDouble();
-    final billingLabel = _selectedPlan == SubscriptionPlan.yearly
-        ? r'$9.99 billed yearly'
-        : r'$0.99 billed monthly';
+    final yearlyPrice =
+        service?.priceFor(
+          SubscriptionService.yearlyBasePlanId,
+          fallback: r'$9.99 / year',
+        ) ??
+        r'$9.99 / year';
+    final monthlyPrice =
+        service?.priceFor(
+          SubscriptionService.monthlyBasePlanId,
+          fallback: r'$0.99 / month',
+        ) ??
+        r'$0.99 / month';
+    final billingLabel =
+        service?.billingLabelFor(
+          _selectedBasePlanId,
+          fallback: _selectedPlan == SubscriptionPlan.yearly
+              ? r'$9.99 billed yearly'
+              : r'$0.99 billed monthly',
+        ) ??
+        (_selectedPlan == SubscriptionPlan.yearly
+            ? r'$9.99 billed yearly'
+            : r'$0.99 billed monthly');
+    final purchasePending = service?.purchasePending ?? false;
+    final canContinue =
+        service == null ||
+        (!service.loading &&
+            !purchasePending &&
+            service.canPurchase(_selectedBasePlanId));
 
     return Dialog(
       backgroundColor: _PaywallColors.background,
@@ -232,8 +316,8 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
                       const SizedBox(height: 12),
                       _PlanCard(
                         title: 'Yearly',
-                        price: r'$9.99 / year',
-                        detail: r'Less than $0.84 per month',
+                        price: yearlyPrice,
+                        detail: 'A full year of daily prayers',
                         badge: 'Best value',
                         selected: _selectedPlan == SubscriptionPlan.yearly,
                         onTap: () => setState(
@@ -243,7 +327,7 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
                       const SizedBox(height: 8),
                       _PlanCard(
                         title: 'Monthly',
-                        price: r'$0.99 / month',
+                        price: monthlyPrice,
                         selected: _selectedPlan == SubscriptionPlan.monthly,
                         onTap: () => setState(
                           () => _selectedPlan = SubscriptionPlan.monthly,
@@ -254,8 +338,7 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
                         button: true,
                         label: 'Continue My Journey with selected plan',
                         child: FilledButton(
-                          onPressed: () =>
-                              Navigator.pop(context, _selectedPlan),
+                          onPressed: canContinue ? _continue : null,
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(56),
                             backgroundColor: _PaywallColors.cream,
@@ -269,16 +352,24 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              SizedBox(width: 25),
-                              Expanded(
+                              const SizedBox(width: 25),
+                              const Expanded(
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: Text('Continue My Journey'),
                                 ),
                               ),
-                              Icon(Icons.eco_outlined, size: 25),
+                              if (purchasePending)
+                                const SizedBox.square(
+                                  dimension: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              else
+                                const Icon(Icons.eco_outlined, size: 25),
                             ],
                           ),
                         ),
@@ -298,10 +389,20 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
                         color: _PaywallColors.subtle,
                         size: 15,
                       ),
+                      if (service?.errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            service!.errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: _PaywallColors.paleGold),
+                          ),
+                        ),
                       _FooterLinks(
-                        onRestore: () {},
-                        onTerms: () {},
-                        onPrivacy: () {},
+                        onRestore: _restore,
+                        onTerms: () => _openLegalPage('terms.html'),
+                        onPrivacy: () => _openLegalPage('privacy.html'),
                       ),
                     ],
                   ),

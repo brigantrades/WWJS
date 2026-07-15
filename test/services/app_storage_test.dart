@@ -25,4 +25,18 @@ void main() {
       expect(snapshot.reminderTime, const TimeOfDay(hour: 7, minute: 30));
     },
   );
+
+  test('reset keeps preferences owned by Supabase Auth', () async {
+    SharedPreferences.setMockInitialValues({
+      'supabase.auth.token': 'anonymous-session',
+    });
+    final storage = AppStorage();
+    await storage.saveOnboarding(DateTime(2026, 7, 11));
+
+    await storage.reset();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('supabase.auth.token'), 'anonymous-session');
+    expect((await storage.load()).onboardingComplete, isFalse);
+  });
 }

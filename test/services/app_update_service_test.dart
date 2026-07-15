@@ -85,6 +85,25 @@ void main() {
     expect(await service.availableUpdate(), isNotNull);
   });
 
+  test('shows a Play update even when an in-app flow is unavailable', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = AppUpdateService(
+      repository: _FakeRepository(null),
+      packageInfoLoader: () async => _packageInfo(build: '10'),
+      platform: 'android',
+      androidUpdateInvoker: (method, arguments) async => {
+        'updateAvailable': true,
+        'availableVersionCode': 11,
+        'recommendedType': 'none',
+      },
+    );
+
+    final result = await service.availableUpdate();
+
+    expect(result?.latestBuild, 11);
+    expect(result?.nativeUpdateType, isNull);
+  });
+
   test('starts the native Google Play update flow', () async {
     var invokedMethod = '';
     final service = AppUpdateService(

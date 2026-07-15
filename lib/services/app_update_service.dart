@@ -171,13 +171,15 @@ class AppUpdateService {
         result?['availableVersionCode']?.toString() ?? '',
       );
       if (latestBuild == null) return null;
+      final recommendedType = result?['recommendedType']?.toString();
       return AppUpdate(
         platform: 'android',
         latestBuild: latestBuild,
         storeUrl: Uri.parse(_playStoreUrl),
-        nativeUpdateType: result?['recommendedType']?.toString() == 'immediate'
-            ? 'immediate'
-            : 'flexible',
+        nativeUpdateType:
+            recommendedType == 'immediate' || recommendedType == 'flexible'
+            ? recommendedType
+            : null,
       );
     } catch (error, stackTrace) {
       debugPrint('Google Play update lookup failed: $error\n$stackTrace');

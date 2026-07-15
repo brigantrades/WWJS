@@ -1,11 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/notification_service.dart';
+import 'package:wwjs/services/subscription_service.dart';
 import 'package:wwjs/state/app_controller.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('restores favorite, completion, and playback position', () async {
     SharedPreferences.setMockInitialValues({});
     final first = AppController(
@@ -78,6 +82,40 @@ void main() {
     expect(restored.todaysPrayer.day, 7);
     expect(restored.unlockedPrayers.last.day, 7);
   });
+
+  test('active subscription resumes daily progression beyond Day 7', () async {
+    SharedPreferences.setMockInitialValues({});
+    const contentRepository = _TenDayContentRepository();
+    final first = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => DateTime(2026, 7, 11),
+      contentRepository: contentRepository,
+    );
+    await first.initialize();
+    await first.finishOnboarding(startingDay: 7);
+    await first.markCompleted(7);
+
+    final restored = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => DateTime(2026, 7, 14),
+      contentRepository: contentRepository,
+      subscriptionService: _ActiveSubscriptionService(),
+    );
+    await restored.initialize();
+
+    expect(restored.highestAccessibleDay, 10);
+    expect(restored.todaysPrayer.day, 10);
+    expect(restored.requiresSubscription, isFalse);
+    restored.dispose();
+  });
+}
+
+class _ActiveSubscriptionService extends SubscriptionService {
+  _ActiveSubscriptionService()
+    : super(SupabaseClient('https://example.supabase.co', 'test-key'));
+
+  @override
+  bool get isEntitled => true;
 }
 
 class _TenDayContentRepository implements ContentRepository {

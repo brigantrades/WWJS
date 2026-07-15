@@ -16,15 +16,12 @@ class TodayScreen extends StatelessWidget {
   final AppController controller;
 
   Future<void> _openPrayer(BuildContext context, PrayerContent prayer) async {
-    if (prayer.day > 7) {
-      final plan = await showSubscriptionModal(context);
-      if (plan == null || !context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Subscription purchasing will be connected next.'),
-        ),
+    if (prayer.day > 7 && !controller.hasActiveSubscription) {
+      await showSubscriptionModal(
+        context,
+        subscriptionService: controller.subscriptionService,
       );
-      return;
+      if (!context.mounted || !controller.hasActiveSubscription) return;
     }
     Navigator.of(context).push(
       MaterialPageRoute(

@@ -142,7 +142,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         completedDay: widget.prayer.day,
         wasAlreadyCompleted: wasAlreadyCompleted,
       )) {
-        await showSubscriptionModal(context);
+        await showSubscriptionModal(
+          context,
+          subscriptionService: widget.controller.subscriptionService,
+        );
       }
     } finally {
       _completionInProgress = false;
@@ -276,15 +279,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     ),
                                   ),
                                   const Spacer(),
-                                  if (widget.controller.hasCompletedFreeAccess)
+                                  if (widget.controller.requiresSubscription)
                                     IconButton.filledTonal(
                                       tooltip: 'Upgrade',
                                       onPressed: () async {
-                                        await showSubscriptionModal(context);
+                                        await showSubscriptionModal(
+                                          context,
+                                          subscriptionService: widget
+                                              .controller
+                                              .subscriptionService,
+                                        );
                                       },
                                       icon: const Icon(Icons.lock_open_rounded),
                                     ),
-                                  if (widget.controller.hasCompletedFreeAccess)
+                                  if (widget.controller.requiresSubscription)
                                     const SizedBox(width: 4),
                                   IconButton.filledTonal(
                                     tooltip: favorite

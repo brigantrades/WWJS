@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -40,7 +42,13 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _scheduleUpdateCheck();
+    if (state == AppLifecycleState.resumed) {
+      _scheduleUpdateCheck();
+      final subscriptionService = widget.controller.subscriptionService;
+      if (subscriptionService != null) {
+        unawaited(subscriptionService.syncPurchases());
+      }
+    }
   }
 
   void _scheduleUpdateCheck() {
@@ -118,10 +126,13 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.controller.hasCompletedFreeAccess)
+            if (widget.controller.requiresSubscription)
               UpgradePrompt(
                 onPressed: () async {
-                  await showSubscriptionModal(context);
+                  await showSubscriptionModal(
+                    context,
+                    subscriptionService: widget.controller.subscriptionService,
+                  );
                 },
               ),
             DecoratedBox(

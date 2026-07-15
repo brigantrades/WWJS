@@ -9,6 +9,7 @@ import '../services/app_review_service.dart';
 import '../services/content_repository.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_audio_session.dart';
+import '../services/subscription_service.dart';
 
 class AppController extends ChangeNotifier {
   static const freeDayLimit = 7;
@@ -19,19 +20,23 @@ class AppController extends ChangeNotifier {
     DateTime Function()? now,
     ContentRepository? contentRepository,
     ReviewPrompter? reviewPrompter,
+    this.subscriptionService,
     this.audioSession,
   }) : _storage = storage ?? AppStorage(),
        _reminders = reminders ?? NotificationService(),
        _reviewPrompter = reviewPrompter ?? AppReviewService(),
        _contentRepository =
            contentRepository ?? const BundledContentRepository(),
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now {
+    subscriptionService?.addListener(_subscriptionChanged);
+  }
 
   final AppStorage _storage;
   final ReminderScheduler _reminders;
   final ReviewPrompter _reviewPrompter;
   final ContentRepository _contentRepository;
   final DateTime Function() _now;
+  final SubscriptionService? subscriptionService;
   final PrayerAudioSession? audioSession;
   List<PrayerContent> prayers = [];
 
@@ -51,7 +56,12 @@ class AppController extends ChangeNotifier {
 
   bool get hasCompletedFreeAccess => completed.contains(freeDayLimit);
 
-  int get highestAccessibleDay => hasCompletedFreeAccess
+  bool get hasActiveSubscription => subscriptionService?.isEntitled ?? false;
+
+  bool get requiresSubscription =>
+      hasCompletedFreeAccess && !hasActiveSubscription;
+
+  int get highestAccessibleDay => requiresSubscription
       ? freeDayLimit.clamp(0, prayers.length)
       : highestUnlockedDay;
 
@@ -180,6 +190,8 @@ class AppController extends ChangeNotifier {
     await _storage.saveTextScale(scale);
   }
 
+  void _subscriptionChanged() => notifyListeners();
+
   Future<void> reset() async {
     await _reminders.cancel();
     await _storage.reset();
@@ -200,6 +212,8 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    subscriptionService?.removeListener(_subscriptionChanged);
+    subscriptionService?.dispose();
     if (audioSession != null) unawaited(audioSession!.dispose());
     super.dispose();
   }

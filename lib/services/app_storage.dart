@@ -130,6 +130,21 @@ class AppStorage {
   }
 
   Future<void> reset() async {
-    await (await _prefs).clear();
+    final prefs = await _prefs;
+    for (final key in [
+      _onboarding,
+      _startDate,
+      _highestUnlocked,
+      _favorites,
+      _completed,
+      _positions,
+      _reminderEnabled,
+      _reminderHour,
+      _reminderMinute,
+      _theme,
+      _textScale,
+    ]) {
+      await prefs.remove(key);
+    }
   }
 }

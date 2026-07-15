@@ -271,7 +271,11 @@ class SettingsScreen extends StatelessWidget {
                             icon: Icons.payments_outlined,
                             title: 'Show paywall',
                             compact: true,
-                            onTap: () => showSubscriptionModal(context),
+                            onTap: () => showSubscriptionModal(
+                              context,
+                              subscriptionService:
+                                  controller.subscriptionService,
+                            ),
                           ),
                           const _LightSettingsDivider(),
                           _LightSettingsRow(
@@ -448,7 +452,11 @@ class SettingsScreen extends StatelessWidget {
                             icon: Icons.payments_outlined,
                             title: 'Show paywall',
                             compact: true,
-                            onTap: () => showSubscriptionModal(context),
+                            onTap: () => showSubscriptionModal(
+                              context,
+                              subscriptionService:
+                                  controller.subscriptionService,
+                            ),
                           ),
                           const _DarkSettingsDivider(),
                           _DarkSettingsRow(

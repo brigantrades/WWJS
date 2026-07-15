@@ -2,6 +2,7 @@ package com.wwjs.wwjs
 
 import android.content.Intent
 import android.util.Log
+import com.ryanheise.audioservice.AudioServiceActivity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -10,7 +11,6 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
-import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
@@ -18,7 +18,7 @@ private const val appUpdateChannelName = "wwjs/app_update"
 private const val updateRequestCode = 8617
 private const val appUpdateLogTag = "WWJSAppUpdate"
 
-class MainActivity : FlutterActivity() {
+class MainActivity : AudioServiceActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private var installStateListener: InstallStateUpdatedListener? = null
 
@@ -45,8 +45,26 @@ class MainActivity : FlutterActivity() {
         super.onResume()
         if (!::appUpdateManager.isInitialized) return
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (info.installStatus() == InstallStatus.DOWNLOADED) {
-                appUpdateManager.completeUpdate()
+            when {
+                info.updateAvailability() ==
+                    UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS &&
+                    info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE) -> {
+                    try {
+                        val options =
+                            AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                        appUpdateManager.startUpdateFlowForResult(
+                            info,
+                            this,
+                            options,
+                            updateRequestCode,
+                        )
+                    } catch (error: Exception) {
+                        Log.w(appUpdateLogTag, "Unable to resume immediate update", error)
+                    }
+                }
+                info.installStatus() == InstallStatus.DOWNLOADED -> {
+                    appUpdateManager.completeUpdate()
+                }
             }
         }
     }
@@ -110,9 +128,7 @@ class MainActivity : FlutterActivity() {
         val installStatus = info.installStatus()
         val flexibleAllowed = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
         val immediateAllowed = info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
-        val available =
-            info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
-                (flexibleAllowed || immediateAllowed)
+        val available = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
 
         return mapOf(
             "updateAvailable" to available,
