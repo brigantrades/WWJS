@@ -39,6 +39,7 @@ class AppController extends ChangeNotifier {
   final SubscriptionService? subscriptionService;
   final PrayerAudioSession? audioSession;
   List<PrayerContent> prayers = [];
+  bool _disposed = false;
 
   bool onboardingComplete = false;
   DateTime? startDate;
@@ -71,12 +72,17 @@ class AppController extends ChangeNotifier {
   PrayerContent get todaysPrayer => unlockedPrayers.last;
 
   Future<void> initialize() async {
-    prayers = [...await _contentRepository.fetchPublishedPrayers()]
+    final (publishedPrayers, snapshot, _) = await (
+      _contentRepository.fetchPublishedPrayers(),
+      _storage.load(),
+      _reminders.initialize(),
+    ).wait;
+
+    prayers = [...publishedPrayers]
       ..sort((first, second) => first.day.compareTo(second.day));
     if (prayers.isEmpty) {
       throw StateError('No published prayer days were returned by Supabase.');
     }
-    final snapshot = await _storage.load();
     onboardingComplete = snapshot.onboardingComplete;
     startDate = snapshot.startDate;
     highestUnlockedDay = snapshot.highestUnlockedDay;
@@ -88,7 +94,6 @@ class AppController extends ChangeNotifier {
     themeMode = snapshot.themeMode;
     textScale = snapshot.textScale;
 
-    await _reminders.initialize();
     if (onboardingComplete && startDate != null) {
       highestUnlockedDay = calculateUnlockedDay(
         startDate: startDate!,
@@ -98,7 +103,39 @@ class AppController extends ChangeNotifier {
       );
       await _storage.saveHighestUnlocked(highestUnlockedDay);
     }
-    await preloadTodayAudio();
+    unawaited(preloadTodayAudio());
+    if (_contentRepository case RefreshableContentRepository repository) {
+      unawaited(_refreshPublishedPrayers(repository));
+    }
+  }
+
+  Future<void> _refreshPublishedPrayers(
+    RefreshableContentRepository repository,
+  ) async {
+    try {
+      final refreshed = [...await repository.refreshPublishedPrayers()]
+        ..sort((first, second) => first.day.compareTo(second.day));
+      if (_disposed || refreshed.isEmpty) return;
+
+      prayers = refreshed;
+      if (onboardingComplete && startDate != null) {
+        final refreshedHighest = calculateUnlockedDay(
+          startDate: startDate!,
+          today: _now(),
+          previousHighest: highestUnlockedDay,
+          contentCount: prayers.length,
+        );
+        if (refreshedHighest != highestUnlockedDay) {
+          highestUnlockedDay = refreshedHighest;
+          await _storage.saveHighestUnlocked(highestUnlockedDay);
+        }
+      }
+      if (_disposed) return;
+      notifyListeners();
+      unawaited(preloadTodayAudio());
+    } catch (error, stackTrace) {
+      debugPrint('Refreshing prayer content failed: $error\n$stackTrace');
+    }
   }
 
   Future<void> preloadTodayAudio() async {
@@ -212,6 +249,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     subscriptionService?.removeListener(_subscriptionChanged);
     subscriptionService?.dispose();
     if (audioSession != null) unawaited(audioSession!.dispose());

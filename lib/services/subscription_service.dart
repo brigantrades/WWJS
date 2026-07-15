@@ -7,14 +7,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SubscriptionService extends ChangeNotifier {
   SubscriptionService(this._supabase, {InAppPurchase? store})
-    : _store = store ?? InAppPurchase.instance;
+    : _providedStore = store;
 
   static const productId = 'wwjs_full_access';
   static const monthlyBasePlanId = 'monthly';
   static const yearlyBasePlanId = 'yearly';
 
   final SupabaseClient _supabase;
-  final InAppPurchase _store;
+  InAppPurchase? _providedStore;
+  InAppPurchase get _store => _providedStore ??= InAppPurchase.instance;
   final Map<String, ProductDetails> _products = {};
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
 

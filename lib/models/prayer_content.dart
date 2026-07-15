@@ -19,6 +19,13 @@ class PrayerSection {
     text: json['text'] as String,
     startsAt: Duration(milliseconds: json['starts_at_ms'] as int),
   );
+
+  Map<String, dynamic> toJson() => {
+    'type': type.name,
+    'label': label,
+    'text': text,
+    'starts_at_ms': startsAt.inMilliseconds,
+  };
 }
 
 class PrayerContent {
@@ -66,6 +73,21 @@ class PrayerContent {
         .map((item) => PrayerSection.fromJson(item as Map<String, dynamic>))
         .toList(growable: false),
   );
+
+  Map<String, dynamic> toJson() => {
+    'day': day,
+    'title': title,
+    'scripture_reference': scriptureReference,
+    'scripture_text': scriptureText,
+    'preparation_text': preparationText,
+    'reflection_text': reflectionText,
+    'response_prayer': responsePrayer,
+    'closing_text': closingText,
+    'audio_url': audioUrl,
+    'duration_ms': estimatedDuration.inMilliseconds,
+    'has_production_audio': hasProductionAudio,
+    'sections': sections.map((section) => section.toJson()).toList(),
+  };
 
   PrayerSection sectionAt(Duration position) {
     PrayerSection current = sections.first;

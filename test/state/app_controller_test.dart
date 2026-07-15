@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -108,6 +110,24 @@ void main() {
     expect(restored.requiresSubscription, isFalse);
     restored.dispose();
   });
+
+  test('opens with local content while fresh content loads', () async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = _DeferredRefreshContentRepository();
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      contentRepository: repository,
+    );
+
+    await controller.initialize();
+    expect(controller.prayerCount, 1);
+
+    repository.refresh.complete(const _TenDayContentRepository().prayers);
+    await pumpEventQueue();
+
+    expect(controller.prayerCount, 10);
+    controller.dispose();
+  });
 }
 
 class _ActiveSubscriptionService extends SubscriptionService {
@@ -122,7 +142,9 @@ class _TenDayContentRepository implements ContentRepository {
   const _TenDayContentRepository();
 
   @override
-  Future<List<PrayerContent>> fetchPublishedPrayers() async => [
+  Future<List<PrayerContent>> fetchPublishedPrayers() async => prayers;
+
+  List<PrayerContent> get prayers => [
     for (var day = 1; day <= 10; day++)
       PrayerContent(
         day: day,
@@ -145,4 +167,18 @@ class _TenDayContentRepository implements ContentRepository {
         ],
       ),
   ];
+}
+
+class _DeferredRefreshContentRepository
+    implements RefreshableContentRepository {
+  final refresh = Completer<List<PrayerContent>>();
+
+  @override
+  Future<List<PrayerContent>> fetchPublishedPrayers() async {
+    final prayers = const _TenDayContentRepository().prayers;
+    return [prayers.first];
+  }
+
+  @override
+  Future<List<PrayerContent>> refreshPublishedPrayers() => refresh.future;
 }

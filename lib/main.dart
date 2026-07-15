@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -26,18 +28,16 @@ Future<void> main() async {
   }
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
   final supabase = Supabase.instance.client;
-  if (supabase.auth.currentSession == null) {
-    await supabase.auth.signInAnonymously();
-  }
   final subscriptionService = SubscriptionService(supabase);
-  await subscriptionService.initialize();
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.wwjs.wwjs.audio',
     androidNotificationChannelName: 'Prayer playback',
     androidNotificationOngoing: true,
   );
   final controller = AppController(
-    contentRepository: SupabaseContentRepository(supabase),
+    contentRepository: LocalFirstContentRepository(
+      remote: SupabaseContentRepository(supabase),
+    ),
     subscriptionService: subscriptionService,
     audioSession: PrayerAudioSession(),
   );
@@ -46,4 +46,24 @@ Future<void> main() async {
     repository: SupabaseAppUpdateRepository(supabase),
   );
   runApp(WWJSApp(controller: controller, updateService: updateService));
+  unawaited(_initializeSubscriptions(supabase, subscriptionService));
+}
+
+Future<void> _initializeSubscriptions(
+  SupabaseClient supabase,
+  SubscriptionService subscriptionService,
+) async {
+  try {
+    if (supabase.auth.currentSession == null) {
+      await supabase.auth.signInAnonymously();
+    }
+  } catch (error, stackTrace) {
+    debugPrint('Anonymous sign-in failed: $error\n$stackTrace');
+  }
+
+  try {
+    await subscriptionService.initialize();
+  } catch (error, stackTrace) {
+    debugPrint('Subscription initialization failed: $error\n$stackTrace');
+  }
 }

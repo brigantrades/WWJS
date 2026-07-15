@@ -12,17 +12,25 @@ class PrayerAudioSession {
   Future<void> _operation = Future.value();
   Future<Duration?>? _requestedPreparation;
   int? _requestedDay;
+  String? _requestedAudioUrl;
   int? _preparedDay;
+  String? _preparedAudioUrl;
 
   Future<Duration?> prepare(PrayerContent prayer) {
-    if (_requestedDay == prayer.day && _requestedPreparation != null) {
+    if (_requestedDay == prayer.day &&
+        _requestedAudioUrl == prayer.audioUrl &&
+        _requestedPreparation != null) {
       return _requestedPreparation!;
     }
 
     _requestedDay = prayer.day;
+    _requestedAudioUrl = prayer.audioUrl;
     final preparation = _operation.then((_) async {
       try {
-        if (_preparedDay == prayer.day) return player.duration;
+        if (_preparedDay == prayer.day &&
+            _preparedAudioUrl == prayer.audioUrl) {
+          return player.duration;
+        }
 
         final mediaItem = MediaItem(
           id: 'prayer-${prayer.day}',
@@ -39,6 +47,7 @@ class PrayerAudioSession {
               AudioSource.uri(uri, tag: mediaItem),
             );
             _preparedDay = prayer.day;
+            _preparedAudioUrl = prayer.audioUrl;
             return duration;
           } catch (error, stackTrace) {
             lastError = error;
@@ -48,8 +57,10 @@ class PrayerAudioSession {
 
         Error.throwWithStackTrace(lastError!, lastStackTrace!);
       } catch (_) {
-        if (_requestedDay == prayer.day) {
+        if (_requestedDay == prayer.day &&
+            _requestedAudioUrl == prayer.audioUrl) {
           _requestedDay = null;
+          _requestedAudioUrl = null;
           _requestedPreparation = null;
         }
         rethrow;
