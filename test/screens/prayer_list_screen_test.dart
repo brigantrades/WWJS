@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wwjs/core/app_theme.dart';
 import 'package:wwjs/screens/prayer_list_screen.dart';
+import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
 import 'package:wwjs/widgets/prayer_card.dart';
@@ -170,5 +171,29 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(r'Day 1, completed')), findsOneWidget);
     expect(tester.takeException(), isNull);
     semantics.dispose();
+  });
+
+  testWidgets('opening a prayer records only its numeric day locally', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    controller.favorites = {1};
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.light),
+        home: PrayerListScreen(controller: controller),
+      ),
+    );
+    await tester.tap(find.byType(PrayerCard));
+    await tester.pump();
+
+    final history = await controller.loadLocalActivityHistory();
+    expect(
+      history.prayerTotal(LocalActivityMetric.prayerOpened, prayerDay: 1),
+      1,
+    );
   });
 }

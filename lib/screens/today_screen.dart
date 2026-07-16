@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../models/prayer_content.dart';
 import '../state/app_controller.dart';
@@ -8,6 +9,7 @@ import '../widgets/brand_logo.dart';
 import '../widgets/brand_wordmark.dart';
 import '../widgets/dawn_artwork.dart';
 import '../widgets/subscription_modal.dart';
+import '../widgets/tablet_artwork_background.dart';
 import 'player_screen.dart';
 
 class TodayScreen extends StatelessWidget {
@@ -70,20 +72,28 @@ class TodayScreen extends StatelessWidget {
         bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final isTablet = AppLayout.isTablet(context);
+            final panelInset = AppLayout.horizontalInset(
+              context,
+              phoneInset: 14,
+            );
             final artworkHeight = (constraints.maxHeight * .48).clamp(
               300.0,
               420.0,
             );
-            return SingleChildScrollView(
+            final content = SingleChildScrollView(
               child: Column(
                 children: [
                   Stack(
                     children: [
-                      DawnArtwork(height: artworkHeight),
+                      if (isTablet)
+                        SizedBox(height: artworkHeight)
+                      else
+                        DawnArtwork(height: artworkHeight),
                       Positioned(
                         top: MediaQuery.paddingOf(context).top + 18,
-                        left: 24,
-                        right: 16,
+                        left: isTablet ? panelInset : 24,
+                        right: isTablet ? panelInset : 16,
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -106,8 +116,9 @@ class TodayScreen extends StatelessWidget {
                   Transform.translate(
                     offset: const Offset(0, -48),
                     child: Container(
+                      key: const Key('light-today-prayer-panel'),
                       width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 14),
+                      margin: EdgeInsets.symmetric(horizontal: panelInset),
                       padding: const EdgeInsets.fromLTRB(26, 28, 26, 24),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
@@ -213,6 +224,21 @@ class TodayScreen extends StatelessWidget {
                 ],
               ),
             );
+            if (!isTablet) return content;
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                const TabletArtworkBackground(
+                  key: Key('tablet-today-background'),
+                  assetName: 'assets/images/dawn-path.png',
+                  preservePortraitComposition: true,
+                  portraitOffsetY: -260,
+                  bottomScrimOpacity: .34,
+                ),
+                content,
+              ],
+            );
           },
         ),
       ),
@@ -246,6 +272,11 @@ class TodayScreen extends StatelessWidget {
           bottom: false,
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final isTablet = AppLayout.isTablet(context);
+              final panelInset = AppLayout.horizontalInset(
+                context,
+                phoneInset: 15,
+              );
               final artworkHeight = (constraints.maxHeight * .52).clamp(
                 360.0,
                 420.0,
@@ -253,44 +284,57 @@ class TodayScreen extends StatelessWidget {
               final backgroundHeight = artworkHeight * 1.86;
 
               return Stack(
+                fit: isTablet ? StackFit.expand : StackFit.loose,
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  Positioned.fill(
-                    child: ColoredBox(color: semantic.appBackground),
-                  ),
-                  Positioned(
-                    top: -artworkHeight * .30,
-                    left: 0,
-                    right: 0,
-                    height: backgroundHeight,
-                    child: ExcludeSemantics(
-                      child: Image.asset(
-                        'assets/images/dawn-path-dark.png',
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        filterQuality: FilterQuality.high,
+                  if (isTablet)
+                    const Positioned.fill(
+                      child: TabletArtworkBackground(
+                        key: Key('tablet-today-background'),
+                        assetName: 'assets/images/dawn-path-dark.png',
+                        preservePortraitComposition: true,
+                        portraitOffsetY: -260,
+                        bottomScrimOpacity: .34,
+                      ),
+                    )
+                  else ...[
+                    Positioned.fill(
+                      child: ColoredBox(color: semantic.appBackground),
+                    ),
+                    Positioned(
+                      top: -artworkHeight * .30,
+                      left: 0,
+                      right: 0,
+                      height: backgroundHeight,
+                      child: ExcludeSemantics(
+                        child: Image.asset(
+                          'assets/images/dawn-path-dark.png',
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          filterQuality: FilterQuality.high,
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              semantic.appBackground.withValues(alpha: .18),
-                              semantic.appBackground.withValues(alpha: .82),
-                              semantic.appBackground,
-                            ],
-                            stops: const [.34, .57, .79, 1],
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                semantic.appBackground.withValues(alpha: .18),
+                                semantic.appBackground.withValues(alpha: .82),
+                                semantic.appBackground,
+                              ],
+                              stops: const [.34, .57, .79, 1],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                   SingleChildScrollView(
                     child: Column(
                       children: [
@@ -298,6 +342,7 @@ class TodayScreen extends StatelessWidget {
                         Transform.translate(
                           offset: const Offset(0, -48),
                           child: _DarkPrayerPanel(
+                            horizontalInset: panelInset,
                             prayer: prayer,
                             favorite: favorite,
                             completed: completed,
@@ -313,8 +358,8 @@ class TodayScreen extends StatelessWidget {
                   ),
                   Positioned(
                     top: MediaQuery.paddingOf(context).top + 26,
-                    left: 28,
-                    right: 20,
+                    left: isTablet ? panelInset : 28,
+                    right: isTablet ? panelInset : 20,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -396,6 +441,7 @@ class TodayScreen extends StatelessWidget {
 
 class _DarkPrayerPanel extends StatelessWidget {
   const _DarkPrayerPanel({
+    required this.horizontalInset,
     required this.prayer,
     required this.favorite,
     required this.completed,
@@ -404,6 +450,7 @@ class _DarkPrayerPanel extends StatelessWidget {
     required this.onOpenPrayer,
   });
 
+  final double horizontalInset;
   final PrayerContent prayer;
   final bool favorite;
   final bool completed;
@@ -419,7 +466,7 @@ class _DarkPrayerPanel extends StatelessWidget {
     return Container(
       key: const Key('dark-today-prayer-panel'),
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 15),
+      margin: EdgeInsets.symmetric(horizontal: horizontalInset),
       padding: const EdgeInsets.fromLTRB(26, 28, 26, 28),
       decoration: BoxDecoration(
         color: const Color(0xF211211C),

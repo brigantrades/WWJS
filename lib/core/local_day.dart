@@ -2,7 +2,9 @@ DateTime localDay(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
 int calendarDayDifference(DateTime from, DateTime to) {
-  return localDay(to).difference(localDay(from)).inDays;
+  final fromUtc = DateTime.utc(from.year, from.month, from.day);
+  final toUtc = DateTime.utc(to.year, to.month, to.day);
+  return toUtc.difference(fromUtc).inDays;
 }
 
 int calculateUnlockedDay({

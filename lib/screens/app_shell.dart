@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../services/app_update_service.dart';
+import '../services/local_activity_store.dart';
 import '../state/app_controller.dart';
 import '../widgets/subscription_modal.dart';
 import '../widgets/update_modal.dart';
@@ -31,6 +33,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    unawaited(widget.controller.recordScreenView(LocalActivityScreen.today));
     _scheduleUpdateCheck();
   }
 
@@ -42,12 +45,20 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _scheduleUpdateCheck();
-      final subscriptionService = widget.controller.subscriptionService;
-      if (subscriptionService != null) {
-        unawaited(subscriptionService.syncPurchases());
-      }
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _scheduleUpdateCheck();
+        final subscriptionService = widget.controller.subscriptionService;
+        if (subscriptionService != null) {
+          unawaited(subscriptionService.syncPurchases());
+        }
+        break;
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        break;
+      case AppLifecycleState.inactive:
+        break;
     }
   }
 
@@ -72,7 +83,9 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
       if (action == UpdateModalAction.update) {
         final opened = await service.openUpdate(update);
-        if (!opened && mounted) {
+        if (opened) {
+          await service.markUpdateOpened(update);
+        } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Unable to open the update page.')),
           );
@@ -94,17 +107,26 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       _tabHistory.add(_index);
       _index = value;
     });
+    unawaited(widget.controller.recordScreenView(_screenFor(value)));
   }
 
   void _goBack() {
     setState(() {
       _index = _tabHistory.isEmpty ? 0 : _tabHistory.removeLast();
     });
+    unawaited(widget.controller.recordScreenView(_screenFor(_index)));
   }
+
+  LocalActivityScreen _screenFor(int index) => switch (index) {
+    1 => LocalActivityScreen.prayers,
+    2 => LocalActivityScreen.settings,
+    _ => LocalActivityScreen.today,
+  };
 
   @override
   Widget build(BuildContext context) {
     final semantic = AppSemanticColors.of(context);
+    final isTablet = AppLayout.isTablet(context);
     final screens = [
       TodayScreen(controller: widget.controller),
       PrayerListScreen(
@@ -116,6 +138,30 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         updateService: widget.updateService,
       ),
     ];
+
+    NavigationBar navigationBar({Color? backgroundColor}) => NavigationBar(
+      backgroundColor: backgroundColor,
+      selectedIndex: _index,
+      onDestinationSelected: _selectTab,
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.wb_sunny_outlined),
+          selectedIcon: Icon(Icons.wb_sunny),
+          label: 'Today',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.menu_book_outlined),
+          selectedIcon: Icon(Icons.menu_book),
+          label: 'Prayers',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: 'Settings',
+        ),
+      ],
+    );
+
     return PopScope(
       canPop: _index == 0 && _tabHistory.isEmpty,
       onPopInvokedWithResult: (didPop, result) {
@@ -139,27 +185,20 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: semantic.subtleBorder)),
               ),
-              child: NavigationBar(
-                selectedIndex: _index,
-                onDestinationSelected: _selectTab,
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.wb_sunny_outlined),
-                    selectedIcon: Icon(Icons.wb_sunny),
-                    label: 'Today',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.menu_book_outlined),
-                    selectedIcon: Icon(Icons.menu_book),
-                    label: 'Prayers',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.settings_outlined),
-                    selectedIcon: Icon(Icons.settings),
-                    label: 'Settings',
-                  ),
-                ],
-              ),
+              child: isTablet
+                  ? ColoredBox(
+                      color: semantic.navigationBackground,
+                      child: Center(
+                        child: SizedBox(
+                          key: const Key('tablet-navigation-content'),
+                          width: AppLayout.tabletContentWidth,
+                          child: navigationBar(
+                            backgroundColor: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    )
+                  : navigationBar(),
             ),
           ],
         ),

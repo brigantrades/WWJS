@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/services/content_repository.dart';
+import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/services/subscription_service.dart';
 import 'package:wwjs/state/app_controller.dart';
@@ -127,6 +129,56 @@ void main() {
 
     expect(controller.prayerCount, 10);
     controller.dispose();
+  });
+
+  test('records and resets local-only activity aggregates', () async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 16, 8);
+    final activityStore = LocalActivityStore(now: () => now);
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => now,
+      activityStore: activityStore,
+    );
+
+    await controller.initialize();
+    await controller.finishOnboarding(startingDay: 2);
+    await controller.recordScreenView(LocalActivityScreen.today);
+    await controller.recordPrayerOpened(2, resumed: false);
+    await controller.recordPrayerPlaybackStarted(2);
+    await controller.markCompleted(2);
+    await controller.markCompleted(2);
+    await controller.toggleFavorite(2);
+    await controller.toggleFavorite(2);
+    await controller.configureReminder(
+      enabled: true,
+      time: const TimeOfDay(hour: 7, minute: 30),
+    );
+    await controller.configureReminder(
+      enabled: false,
+      time: const TimeOfDay(hour: 7, minute: 30),
+    );
+    now = DateTime(2026, 7, 16, 8, 2);
+    await controller.recordAppBackgrounded();
+
+    final history = await controller.loadLocalActivityHistory();
+    expect(history.total(LocalActivityMetric.appLaunch), 1);
+    expect(history.total(LocalActivityMetric.foregroundSeconds), 120);
+    expect(history.total(LocalActivityMetric.onboardingCompleted), 1);
+    expect(history.screenViewTotal(LocalActivityScreen.today), 1);
+    expect(history.prayerTotal(LocalActivityMetric.prayerOpened), 1);
+    expect(history.prayerTotal(LocalActivityMetric.prayerPlaybackStarted), 1);
+    expect(history.prayerTotal(LocalActivityMetric.prayerCompleted), 2);
+    expect(history.prayerTotal(LocalActivityMetric.prayerFirstCompleted), 1);
+    expect(history.prayerTotal(LocalActivityMetric.prayerReplayCompleted), 1);
+    expect(history.prayerTotal(LocalActivityMetric.favoriteAdded), 1);
+    expect(history.prayerTotal(LocalActivityMetric.favoriteRemoved), 1);
+    expect(history.total(LocalActivityMetric.reminderEnabled), 1);
+    expect(history.total(LocalActivityMetric.reminderDisabled), 1);
+
+    await controller.reset();
+
+    expect((await controller.loadLocalActivityHistory()).uniqueActiveDays, 0);
   });
 }
 

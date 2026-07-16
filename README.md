@@ -1,4 +1,4 @@
-# WWJS: What Would Jesus Say?
+# WWJS: Pray With Jesus
 
 **Pray with Jesus.**
 
@@ -40,9 +40,17 @@ checks that bundled prayer titles and references match all registry entries mark
 
 Keep production narration mono at 44.1 kHz and normalize spoken audio consistently before release.
 
-## Local-only data
+## Local app state
 
-Onboarding date, unlocked day, favorites, completed prayers, reminder preferences, theme, text scale, and playback positions are stored through `shared_preferences`. There is no account or remote database.
+Onboarding date, unlocked day, favorites, completed prayers, reminder preferences, theme, text scale, and playback positions are stored through `shared_preferences`. There is no user-created WWJS profile.
+
+`LocalActivityStore` keeps privacy-minimized usage aggregates in the same local
+preferences store. It retains 90 days of daily totals plus lifetime counters for
+sessions, screen views, prayer opens, playback, completions, favorites, and
+reminder outcomes. It stores no account, install, device, advertising, or network
+identifier and has no upload path. Resetting app data removes this history. Any
+future sharing feature must require consent and export a reviewed summary rather
+than the stored history automatically.
 
 ## Validation
 

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../services/app_update_service.dart';
 import '../state/app_controller.dart';
 import '../widgets/subscription_modal.dart';
+import '../widgets/tablet_artwork_background.dart';
 import '../widgets/update_modal.dart';
 import 'commitment_screen.dart';
 
@@ -151,6 +153,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLightScreen(BuildContext context) {
+    final isTablet = AppLayout.isTablet(context);
+    final horizontalInset = AppLayout.horizontalInset(context, phoneInset: 23);
     final themeName = switch (controller.themeMode) {
       ThemeMode.system => 'System',
       ThemeMode.light => 'Light',
@@ -165,16 +169,35 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: Scaffold(
         key: const Key('light-settings-screen'),
-        backgroundColor: AppColors.playerIvory,
+        backgroundColor: isTablet ? Colors.transparent : AppColors.playerIvory,
         body: Stack(
+          fit: isTablet ? StackFit.expand : StackFit.loose,
           children: [
-            const Positioned.fill(child: _LightSettingsBackground()),
+            if (isTablet)
+              const Positioned.fill(
+                child: TabletArtworkBackground(
+                  key: Key('tablet-settings-background'),
+                  assetName: 'assets/images/dawn-path.png',
+                  preservePortraitComposition: true,
+                  portraitOffsetY: -220,
+                  bottomScrimOpacity: .52,
+                ),
+              )
+            else
+              const Positioned.fill(child: _LightSettingsBackground()),
             CustomScrollView(
               key: const Key('light-settings-scroll-view'),
               slivers: [
-                const SliverToBoxAdapter(child: _LightSettingsHeader()),
+                SliverToBoxAdapter(
+                  child: _LightSettingsHeader(showArtwork: !isTablet),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(23, 0, 23, 40),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalInset,
+                    0,
+                    horizontalInset,
+                    40,
+                  ),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       const _LightSectionLabel(text: 'PRAYER', first: true),
@@ -235,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
                             onTap: () => _openUri(
                               context,
                               Uri.parse(
-                                'https://praywithjesus.app/privacy.html',
+                                'https://www.praywithjesus.app/privacy.html',
                               ),
                             ),
                           ),
@@ -309,6 +332,8 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildDarkScreen(BuildContext context) {
     final semantic = AppSemanticColors.of(context);
+    final isTablet = AppLayout.isTablet(context);
+    final horizontalInset = AppLayout.horizontalInset(context, phoneInset: 23);
     final themeName = switch (controller.themeMode) {
       ThemeMode.system => 'System',
       ThemeMode.light => 'Light',
@@ -323,35 +348,57 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: Scaffold(
         key: const Key('dark-settings-screen'),
-        backgroundColor: semantic.navigationBackground,
+        backgroundColor: isTablet
+            ? Colors.transparent
+            : semantic.navigationBackground,
         body: Stack(
+          fit: isTablet ? StackFit.expand : StackFit.loose,
           children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      semantic.navigationBackground,
-                      Color.lerp(
+            if (isTablet)
+              const Positioned.fill(
+                child: TabletArtworkBackground(
+                  key: Key('tablet-settings-background'),
+                  assetName: 'assets/images/prayer-header-dark.png',
+                  fit: BoxFit.fitWidth,
+                  fadeArtworkBottom: true,
+                  bottomScrimOpacity: .68,
+                  textureOpacity: .18,
+                ),
+              )
+            else
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
                         semantic.navigationBackground,
-                        semantic.appBackground,
-                        .28,
-                      )!,
-                      semantic.navigationBackground,
-                    ],
-                    stops: const [0, .56, 1],
+                        Color.lerp(
+                          semantic.navigationBackground,
+                          semantic.appBackground,
+                          .28,
+                        )!,
+                        semantic.navigationBackground,
+                      ],
+                      stops: const [0, .56, 1],
+                    ),
                   ),
                 ),
               ),
-            ),
             CustomScrollView(
               key: const Key('dark-settings-scroll-view'),
               slivers: [
-                const SliverToBoxAdapter(child: _DarkSettingsHeader()),
+                SliverToBoxAdapter(
+                  child: _DarkSettingsHeader(showArtwork: !isTablet),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(23, 0, 23, 40),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalInset,
+                    0,
+                    horizontalInset,
+                    40,
+                  ),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       const _DarkSectionLabel(text: 'PRAYER', first: true),
@@ -416,7 +463,7 @@ class SettingsScreen extends StatelessWidget {
                             onTap: () => _openUri(
                               context,
                               Uri.parse(
-                                'https://praywithjesus.app/privacy.html',
+                                'https://www.praywithjesus.app/privacy.html',
                               ),
                             ),
                           ),
@@ -531,7 +578,9 @@ class _LightSettingsBackground extends StatelessWidget {
 }
 
 class _LightSettingsHeader extends StatelessWidget {
-  const _LightSettingsHeader();
+  const _LightSettingsHeader({this.showArtwork = true});
+
+  final bool showArtwork;
 
   @override
   Widget build(BuildContext context) {
@@ -541,25 +590,32 @@ class _LightSettingsHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ExcludeSemantics(
-            child: Image.asset(
-              'assets/images/dawn-path.png',
-              fit: BoxFit.cover,
-              alignment: const Alignment(0, -.3),
-              filterQuality: FilterQuality.high,
+          if (showArtwork)
+            ExcludeSemantics(
+              child: Image.asset(
+                'assets/images/dawn-path.png',
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -.3),
+                filterQuality: FilterQuality.high,
+              ),
             ),
-          ),
-          const DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x08FFFDF8),
-                  Color(0x18FFFDF8),
-                  Color(0xB8F7F2E8),
-                ],
-                stops: [0, .68, 1],
+                colors: showArtwork
+                    ? const [
+                        Color(0x08FFFDF8),
+                        Color(0x18FFFDF8),
+                        Color(0xB8F7F2E8),
+                      ]
+                    : [
+                        AppColors.playerIvory.withValues(alpha: .12),
+                        AppColors.playerIvory.withValues(alpha: .20),
+                        AppColors.playerIvory.withValues(alpha: .36),
+                      ],
+                stops: const [0, .68, 1],
               ),
             ),
           ),
@@ -844,7 +900,9 @@ class _LightTextScaleRow extends StatelessWidget {
 }
 
 class _DarkSettingsHeader extends StatelessWidget {
-  const _DarkSettingsHeader();
+  const _DarkSettingsHeader({this.showArtwork = true});
+
+  final bool showArtwork;
 
   @override
   Widget build(BuildContext context) {
@@ -855,15 +913,16 @@ class _DarkSettingsHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ExcludeSemantics(
-            child: Image.asset(
-              'assets/images/prayer-header-dark.png',
-              fit: BoxFit.cover,
-              // Keep the cross below notches and Dynamic Island cutouts.
-              alignment: const Alignment(0, -.55),
-              filterQuality: FilterQuality.high,
+          if (showArtwork)
+            ExcludeSemantics(
+              child: Image.asset(
+                'assets/images/prayer-header-dark.png',
+                fit: BoxFit.cover,
+                // Keep the cross below notches and Dynamic Island cutouts.
+                alignment: const Alignment(0, -.55),
+                filterQuality: FilterQuality.high,
+              ),
             ),
-          ),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(

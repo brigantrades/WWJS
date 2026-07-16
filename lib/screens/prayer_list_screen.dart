@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../models/prayer_content.dart';
 import '../state/app_controller.dart';
 import '../widgets/prayer_card.dart';
+import '../widgets/tablet_artwork_background.dart';
 import 'player_screen.dart';
 
 enum _PrayerFilter { favorites, completed }
@@ -50,6 +52,7 @@ class PrayerListScreen extends StatelessWidget {
     _PrayerFilter filter, {
     required VoidCallback onExplorePrayers,
   }) {
+    final horizontalInset = AppLayout.horizontalInset(context, phoneInset: 20);
     final entries = _entriesFor(filter);
     if (entries.isEmpty) {
       return _EmptyPrayerList(
@@ -59,7 +62,7 @@ class PrayerListScreen extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: EdgeInsets.fromLTRB(horizontalInset, 12, horizontalInset, 28),
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final prayer = entries[index];
@@ -79,7 +82,9 @@ class PrayerListScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final semantic = AppSemanticColors.of(context);
     final usesDarkArtwork = theme.brightness == Brightness.dark;
+    final isTablet = AppLayout.isTablet(context);
     final hasLargeText = MediaQuery.textScalerOf(context).scale(14) > 20;
+    final horizontalInset = AppLayout.horizontalInset(context, phoneInset: 20);
 
     Tab filterTab(String label) {
       if (!hasLargeText) return Tab(text: label);
@@ -91,161 +96,189 @@ class PrayerListScreen extends StatelessWidget {
 
     return DefaultTabController(
       length: _PrayerFilter.values.length,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: semantic.appBackground,
-          surfaceTintColor: Colors.transparent,
-          toolbarHeight: usesDarkArtwork
-              ? _prayerHeaderHeight
-              : _lightPrayerHeaderHeight,
-          centerTitle: true,
-          title: Transform.translate(
-            offset: usesDarkArtwork
-                ? _prayerHeaderTitleOffset
-                : _lightPrayerHeaderTitleOffset,
-            child: Text(
-              'Prayers',
-              style: theme.textTheme.displayMedium?.copyWith(
-                color: semantic.interactiveForeground,
+      child: TabletArtworkFrame(
+        background: TabletArtworkBackground(
+          key: const Key('tablet-prayers-background'),
+          assetName: usesDarkArtwork
+              ? 'assets/images/prayer-header-dark.png'
+              : 'assets/images/prayer-header-light.png',
+          fit: BoxFit.fitWidth,
+          fadeArtworkBottom: true,
+          bottomScrimOpacity: .66,
+          textureOpacity: usesDarkArtwork ? .18 : .38,
+        ),
+        child: Scaffold(
+          backgroundColor: isTablet ? Colors.transparent : null,
+          appBar: AppBar(
+            backgroundColor: isTablet
+                ? Colors.transparent
+                : semantic.appBackground,
+            surfaceTintColor: Colors.transparent,
+            toolbarHeight: usesDarkArtwork
+                ? _prayerHeaderHeight
+                : _lightPrayerHeaderHeight,
+            centerTitle: true,
+            title: Transform.translate(
+              offset: usesDarkArtwork
+                  ? _prayerHeaderTitleOffset
+                  : _lightPrayerHeaderTitleOffset,
+              child: Text(
+                'Prayers',
+                style: theme.textTheme.displayMedium?.copyWith(
+                  color: semantic.interactiveForeground,
+                ),
               ),
             ),
-          ),
-          flexibleSpace: ExcludeSemantics(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (usesDarkArtwork)
-                  Image.asset(
-                    'assets/images/prayer-header-dark.png',
-                    fit: BoxFit.cover,
-                    alignment: const Alignment(0, -.55),
-                    filterQuality: FilterQuality.high,
-                  )
-                else
-                  ClipRect(
-                    key: const Key('light-prayer-header-artwork-clip'),
-                    child: Transform.translate(
-                      key: const Key('light-prayer-header-artwork-position'),
-                      offset: const Offset(0, 14),
-                      child: Transform.scale(
-                        scale: 1.18,
-                        alignment: Alignment.topCenter,
-                        child: Image.asset(
-                          'assets/images/prayer-header-light.png',
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          filterQuality: FilterQuality.high,
-                        ),
-                      ),
-                    ),
-                  ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        semantic.appBackground.withValues(
-                          alpha: usesDarkArtwork ? .08 : .42,
-                        ),
-                        semantic.appBackground,
-                      ],
-                      stops: const [.58, .82, 1],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        body: Builder(
-          builder: (tabContext) {
-            void explorePrayers() => onHome?.call();
-
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: ExcludeSemantics(
-                      child: Opacity(
-                        opacity: usesDarkArtwork ? .03 : .18,
-                        child: Image.asset(
-                          'assets/images/player-paper-texture.png',
-                          fit: BoxFit.cover,
-                          color: usesDarkArtwork ? semantic.primaryText : null,
-                          colorBlendMode: usesDarkArtwork
-                              ? BlendMode.softLight
-                              : null,
-                          filterQuality: FilterQuality.low,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(0, -12),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: semantic.controlSurface,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: semantic.subtleBorder),
-                          ),
-                          child: TabBar(
-                            dividerHeight: 0,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            indicator: BoxDecoration(
-                              color: semantic.selectedSurface,
-                              borderRadius: BorderRadius.circular(11),
-                              border: Border.all(
-                                color: semantic.selectionOutline,
+            flexibleSpace: isTablet
+                ? null
+                : ExcludeSemantics(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (usesDarkArtwork)
+                          Image.asset(
+                            'assets/images/prayer-header-dark.png',
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -.55),
+                            filterQuality: FilterQuality.high,
+                          )
+                        else
+                          ClipRect(
+                            key: const Key('light-prayer-header-artwork-clip'),
+                            child: Transform.translate(
+                              key: const Key(
+                                'light-prayer-header-artwork-position',
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: semantic.accent.withValues(alpha: .10),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                              offset: const Offset(0, 14),
+                              child: Transform.scale(
+                                scale: 1.18,
+                                alignment: Alignment.topCenter,
+                                child: Image.asset(
+                                  'assets/images/prayer-header-light.png',
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.topCenter,
+                                  filterQuality: FilterQuality.high,
                                 ),
+                              ),
+                            ),
+                          ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                semantic.appBackground.withValues(
+                                  alpha: usesDarkArtwork ? .08 : .42,
+                                ),
+                                semantic.appBackground,
+                              ],
+                              stops: const [.58, .82, 1],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+          body: Builder(
+            builder: (tabContext) {
+              void explorePrayers() => onHome?.call();
+
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(
+                        child: Opacity(
+                          opacity: usesDarkArtwork ? .03 : .18,
+                          child: Image.asset(
+                            'assets/images/player-paper-texture.png',
+                            fit: BoxFit.cover,
+                            color: usesDarkArtwork
+                                ? semantic.primaryText
+                                : null,
+                            colorBlendMode: usesDarkArtwork
+                                ? BlendMode.softLight
+                                : null,
+                            filterQuality: FilterQuality.low,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: const Offset(0, -12),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalInset,
+                            12,
+                            horizontalInset,
+                            0,
+                          ),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: semantic.controlSurface,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: semantic.subtleBorder),
+                            ),
+                            child: TabBar(
+                              dividerHeight: 0,
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              indicator: BoxDecoration(
+                                color: semantic.selectedSurface,
+                                borderRadius: BorderRadius.circular(11),
+                                border: Border.all(
+                                  color: semantic.selectionOutline,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: semantic.accent.withValues(
+                                      alpha: .10,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              indicatorPadding: const EdgeInsets.all(3),
+                              labelColor: semantic.interactiveForeground,
+                              labelStyle: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              unselectedLabelColor: semantic.unselectedText,
+                              unselectedLabelStyle: const TextStyle(
+                                fontWeight: FontWeight.w400,
+                              ),
+                              tabs: [
+                                filterTab('Favorites'),
+                                filterTab('Completed'),
                               ],
                             ),
-                            indicatorPadding: const EdgeInsets.all(3),
-                            labelColor: semantic.interactiveForeground,
-                            labelStyle: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            unselectedLabelColor: semantic.unselectedText,
-                            unselectedLabelStyle: const TextStyle(
-                              fontWeight: FontWeight.w400,
-                            ),
-                            tabs: [
-                              filterTab('Favorites'),
-                              filterTab('Completed'),
+                          ),
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              for (final filter in _PrayerFilter.values)
+                                _buildPrayerList(
+                                  tabContext,
+                                  filter,
+                                  onExplorePrayers: explorePrayers,
+                                ),
                             ],
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            for (final filter in _PrayerFilter.values)
-                              _buildPrayerList(
-                                tabContext,
-                                filter,
-                                onExplorePrayers: explorePrayers,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

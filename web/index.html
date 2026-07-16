@@ -1,15 +1,16 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <base href="$FLUTTER_BASE_HREF">
+    <base href="/">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#F7F4ED">
+    <meta name="theme-color" content="#17241F">
+    <meta name="color-scheme" content="dark">
     <meta
       name="description"
-      content="WWJS is a private, guided Christian prayer app for Scripture, reflection, and peaceful two-minute prayer."
+      content="WWJS is a guided Christian prayer app that helps you slow down with Scripture, reflection, and about two minutes of audio prayer each day."
     >
-    <meta property="og:title" content="WWJS — Pray with Jesus">
+    <meta property="og:title" content="WWJS — Two Minutes to Pray with Jesus">
     <meta
       property="og:description"
       content="A quiet daily rhythm of Scripture, reflection, and guided prayer."
@@ -18,12 +19,13 @@
     <meta property="og:url" content="https://praywithjesus.app/">
     <meta
       property="og:image"
-      content="https://praywithjesus.app/assets/assets/images/dawn-path.png"
+      content="https://praywithjesus.app/images/connect-with-jesus.jpg"
     >
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=3">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png?v=2">
+    <link rel="preload" as="image" href="images/connect-with-jesus.jpg">
     <link rel="stylesheet" href="styles.css">
-    <title>WWJS — Pray with Jesus</title>
+    <title>WWJS — Two Minutes to Pray with Jesus</title>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -44,19 +46,215 @@
 
       <nav aria-label="Main navigation">
         <a href="#how-it-works">How it works</a>
-        <a href="#inside-the-app">Inside the app</a>
-        <a class="nav-download" href="#download">Download</a>
+        <a href="#inside-wwjs">Inside WWJS</a>
+        <a class="nav-download" href="#download">Get the app</a>
       </nav>
     </header>
 
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">PRAY WITH JESUS</p>
-          <h1 id="hero-title">Make space to hear Jesus.</h1>
+          <p class="eyebrow">HEAR SCRIPTURE. RESPOND IN PRAYER. PRAY WITH JESUS.</p>
+          <h1 id="hero-title">Take two quiet minutes with Jesus.</h1>
           <p class="hero-intro">
-            WWJS guides you through Scripture, a short reflection, and a
-            peaceful two-minute prayer—one day at a time.
+            <strong>WWJS means What Would Jesus Say?</strong> It helps you slow
+            down with Scripture, listen to a Scripture-grounded reflection in
+            the voice of Jesus, and respond to him in peaceful guided
+            prayer—one day at a time.
+          </p>
+
+          <div class="hero-actions">
+            <div class="store-actions hero-store-actions" aria-label="Download WWJS">
+              <a
+                class="store-button"
+                href="https://play.google.com/store/apps/details?id=com.wwjs.wwjs"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Get WWJS on Google Play"
+              >
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M5 4.9v22.2l12.1-11.1L5 4.9Z" fill="currentColor" opacity=".9"/>
+                  <path d="m17.1 16 3.7-3.4 4.7 2.7c1 .6 1 1.5 0 2.1l-4.7 2.7-3.7-4.1Z" fill="currentColor"/>
+                  <path d="m6.6 3.8 14.2 8.8-3.7 3.4L6.6 3.8Zm0 24.4 14.2-8.1-3.7-4.1L6.6 28.2Z" fill="currentColor" opacity=".72"/>
+                </svg>
+                <span><small>GET IT ON</small>Google Play</span>
+              </a>
+
+              <a
+                class="store-button"
+                href="https://testflight.apple.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Get WWJS for iPhone through TestFlight"
+              >
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <rect x="7" y="3" width="18" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+                  <path d="M13 7h6M14.5 25h3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                </svg>
+                <span><small>AVAILABLE FOR</small>iPhone</span>
+              </a>
+            </div>
+            <a class="secondary-action" href="#how-it-works">
+              <span class="secondary-label">See how it works</span>
+              <span class="secondary-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 5v12m0 0 5-5m-5 5-5-5"/>
+                </svg>
+              </span>
+            </a>
+          </div>
+
+          <p class="privacy-note">
+            Come as you are. No account. No public streaks. No pressure.
+          </p>
+        </div>
+
+        <figure class="hero-visual">
+          <div class="hero-image-frame">
+            <img
+              src="images/connect-with-jesus.jpg"
+              width="900"
+              height="1948"
+              alt="WWJS app screens in dark mode showing today's prayer and the prayer player"
+              fetchpriority="high"
+              decoding="async"
+            >
+          </div>
+        </figure>
+      </section>
+
+      <section class="intro-strip" aria-label="WWJS at a glance">
+        <p>Scripture</p>
+        <span aria-hidden="true"></span>
+        <p>Reflection</p>
+        <span aria-hidden="true"></span>
+        <p>Guided prayer</p>
+      </section>
+
+      <section class="section how-section" id="how-it-works" aria-labelledby="how-title">
+        <div class="section-heading">
+          <p class="eyebrow">A SIMPLE DAILY RHYTHM</p>
+          <h2 id="how-title">A simple way to return each day.</h2>
+          <p>
+            Open today’s prayer, listen to Scripture, reflect, and respond in
+            prayer. In about two minutes, carry one hopeful truth into the rest
+            of your day.
+          </p>
+        </div>
+
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-top" aria-hidden="true">
+              <span class="step-number">01</span>
+              <span class="step-icon">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M9 7v10M15 7v10"/>
+                </svg>
+              </span>
+            </div>
+            <h3>Be still</h3>
+            <p>Pause, breathe, and become present.</p>
+          </article>
+          <article class="step-card step-card-listening">
+            <div class="step-top" aria-hidden="true">
+              <span class="step-number">02</span>
+              <span class="step-icon step-icon-listening">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/>
+                </svg>
+              </span>
+            </div>
+            <h3>Listen to Jesus</h3>
+            <p>Hear a Scripture-grounded reflection in the voice of Jesus.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-top" aria-hidden="true">
+              <span class="step-number">03</span>
+              <span class="step-icon">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>
+                </svg>
+              </span>
+            </div>
+            <h3>Respond in prayer</h3>
+            <p>Bring your needs, gratitude, and honest words to Him.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="inside-section" id="inside-wwjs" aria-labelledby="inside-title">
+        <div class="inside-inner">
+          <figure class="player-showcase">
+            <div class="player-image-frame">
+              <img
+                src="images/prayer-player.jpg"
+                width="900"
+                height="1948"
+                loading="lazy"
+                decoding="async"
+                alt="WWJS prayer player showing Matthew 11:28–30 with audio playback controls"
+              >
+            </div>
+            <figcaption>Listen, pause, and pray at your own pace.</figcaption>
+          </figure>
+
+          <div class="feature-copy">
+            <p class="eyebrow">INSIDE WWJS</p>
+            <h2 id="inside-title">A calm place for your daily prayer.</h2>
+            <p class="feature-intro">
+              Open today’s prayer, listen at your own pace, and return to the
+              prayers you want to keep close.
+            </p>
+
+            <ul class="feature-list">
+              <li>
+                <h3>Guided audio for busy days</h3>
+                <p>
+                  Move through Scripture, reflection, and prayer in about two
+                  minutes.
+                </p>
+              </li>
+              <li>
+                <h3>Pray at your own pace</h3>
+                <p>Play, pause, rewind, and continue whenever you’re ready.</p>
+              </li>
+              <li>
+                <h3>Return to meaningful prayers</h3>
+                <p>
+                  Save favorites and revisit the prayers you want to keep close.
+                </p>
+              </li>
+              <li>
+                <h3>A gentle daily rhythm</h3>
+                <p>Choose a reminder that helps you return without pressure.</p>
+              </li>
+              <li>
+                <h3>Private by design</h3>
+                <p>
+                  No account is required, and your prayer activity stays on
+                  your device.
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="download-section" id="download" aria-labelledby="download-title">
+        <div class="download-content">
+          <img
+            src="assets/assets/branding/wwjs-logo.png"
+            width="88"
+            height="88"
+            alt=""
+          >
+          <p class="eyebrow">RETURN EACH DAY</p>
+          <h2 id="download-title">
+            Come back each day for two quiet minutes with Jesus.
+          </h2>
+          <p class="download-intro">
+            You don’t need perfect words or a long routine. Open WWJS, receive
+            the day’s Scripture, and pray.
           </p>
 
           <div class="store-actions" aria-label="Download WWJS">
@@ -90,134 +288,7 @@
             </a>
           </div>
 
-          <p class="privacy-note">
-            No account. No streaks. Your prayer rhythm stays private.
-          </p>
-        </div>
-
-        <div class="hero-visual" aria-label="A dawn-lit path leading toward a cross">
-          <img
-            src="assets/assets/images/dawn-path.png"
-            alt="A warm dawn landscape with a path leading toward a cross"
-          >
-          <div class="hero-card" aria-hidden="true">
-            <span>Today’s prayer</span>
-            <strong>Come and Rest</strong>
-            <small>Matthew 11:28–30 · About 2 minutes</small>
-          </div>
-        </div>
-      </section>
-
-      <section class="intro-strip" aria-label="WWJS at a glance">
-        <p>Scripture</p>
-        <span aria-hidden="true"></span>
-        <p>Reflection</p>
-        <span aria-hidden="true"></span>
-        <p>Guided prayer</p>
-      </section>
-
-      <section class="section" id="how-it-works" aria-labelledby="how-title">
-        <div class="section-heading">
-          <p class="eyebrow">A GENTLE DAILY PATH</p>
-          <h2 id="how-title">Slow down. Listen. Pray.</h2>
-          <p>
-            Each day follows the same simple rhythm, so there is less to
-            navigate and more room to be present.
-          </p>
-        </div>
-
-        <div class="steps">
-          <article class="step-card">
-            <span class="step-number">01</span>
-            <div class="step-icon" aria-hidden="true">✦</div>
-            <h3>Begin with Scripture</h3>
-            <p>A short passage brings your attention back to Jesus.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">02</span>
-            <div class="step-icon" aria-hidden="true">○</div>
-            <h3>Make room to reflect</h3>
-            <p>A brief reflection helps you carry the passage into your day.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">03</span>
-            <div class="step-icon" aria-hidden="true">▷</div>
-            <h3>Pray with guidance</h3>
-            <p>Listen, pause, and respond through a peaceful guided prayer.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="feature-section" id="inside-the-app" aria-labelledby="inside-title">
-        <div class="feature-art" aria-hidden="true">
-          <img src="assets/assets/images/prayer-header-watercolor.png" alt="">
-          <div class="phone-preview">
-            <img src="assets/assets/branding/wwjs-logo.png" alt="">
-            <p>DAY 1</p>
-            <h3>Come and Rest</h3>
-            <span>Matthew 11:28–30</span>
-            <button type="button" tabindex="-1">Begin Prayer</button>
-          </div>
-        </div>
-
-        <div class="feature-copy">
-          <p class="eyebrow">INSIDE WWJS</p>
-          <h2 id="inside-title">Everything you need for a quieter prayer rhythm.</h2>
-
-          <ul class="feature-list">
-            <li>
-              <span aria-hidden="true">♪</span>
-              <div>
-                <h3>Short guided audio</h3>
-                <p>Prayers are easy to begin and gentle enough for a busy day.</p>
-              </div>
-            </li>
-            <li>
-              <span aria-hidden="true">♡</span>
-              <div>
-                <h3>Return to meaningful prayers</h3>
-                <p>Save favorites and continue where you left off.</p>
-              </div>
-            </li>
-            <li>
-              <span aria-hidden="true">⌁</span>
-              <div>
-                <h3>Private by design</h3>
-                <p>No account is required, and your activity stays on your device.</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="download-section" id="download" aria-labelledby="download-title">
-        <img
-          src="assets/assets/branding/wwjs-logo.png"
-          width="88"
-          height="88"
-          alt=""
-        >
-        <p class="eyebrow">BEGIN YOUR DAILY RHYTHM</p>
-        <h2 id="download-title">A quiet moment with Jesus is only a tap away.</h2>
-        <p>Download WWJS and begin with Day 1.</p>
-
-        <div class="store-actions store-actions-centered">
-          <a
-            class="store-button"
-            href="https://play.google.com/store/apps/details?id=com.wwjs.wwjs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span><small>GET IT ON</small>Google Play</span>
-          </a>
-          <a
-            class="store-button"
-            href="https://testflight.apple.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span><small>AVAILABLE FOR</small>iPhone</span>
-          </a>
+          <p class="begin-note">Begin with Day 1.</p>
         </div>
       </section>
     </main>
@@ -232,11 +303,12 @@
         >
         <span class="brand-copy">
           <strong>WWJS</strong>
-          <span>Pray with Jesus</span>
+          <span>What Would Jesus Say?</span>
         </span>
       </a>
       <div class="footer-meta">
         <div class="legal-links" aria-label="Legal">
+          <a href="support.html">Support</a>
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms &amp; Conditions</a>
         </div>

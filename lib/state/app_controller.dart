@@ -7,6 +7,7 @@ import '../models/prayer_content.dart';
 import '../services/app_storage.dart';
 import '../services/app_review_service.dart';
 import '../services/content_repository.dart';
+import '../services/local_activity_store.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_audio_session.dart';
 import '../services/subscription_service.dart';
@@ -20,6 +21,7 @@ class AppController extends ChangeNotifier {
     DateTime Function()? now,
     ContentRepository? contentRepository,
     ReviewPrompter? reviewPrompter,
+    LocalActivityStore? activityStore,
     this.subscriptionService,
     this.audioSession,
   }) : _storage = storage ?? AppStorage(),
@@ -27,6 +29,7 @@ class AppController extends ChangeNotifier {
        _reviewPrompter = reviewPrompter ?? AppReviewService(),
        _contentRepository =
            contentRepository ?? const BundledContentRepository(),
+       _activityStore = activityStore ?? LocalActivityStore(now: now),
        _now = now ?? DateTime.now {
     subscriptionService?.addListener(_subscriptionChanged);
   }
@@ -35,11 +38,13 @@ class AppController extends ChangeNotifier {
   final ReminderScheduler _reminders;
   final ReviewPrompter _reviewPrompter;
   final ContentRepository _contentRepository;
+  final LocalActivityStore _activityStore;
   final DateTime Function() _now;
   final SubscriptionService? subscriptionService;
   final PrayerAudioSession? audioSession;
   List<PrayerContent> prayers = [];
   bool _disposed = false;
+  DateTime? _foregroundStartedAt;
 
   bool onboardingComplete = false;
   DateTime? startDate;
@@ -103,6 +108,8 @@ class AppController extends ChangeNotifier {
       );
       await _storage.saveHighestUnlocked(highestUnlockedDay);
     }
+    await _activityStore.recordAppLaunch();
+    _foregroundStartedAt = _now();
     unawaited(preloadTodayAudio());
     if (_contentRepository case RefreshableContentRepository repository) {
       unawaited(_refreshPublishedPrayers(repository));
@@ -154,6 +161,7 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = day;
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
+    await _activityStore.recordOnboardingCompleted(startingDay: day);
     notifyListeners();
     unawaited(preloadTodayAudio());
   }
@@ -164,22 +172,30 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = day;
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
+    await _activityStore.recordJourneyDayChanged(day);
     notifyListeners();
     unawaited(preloadTodayAudio());
   }
 
   Future<void> toggleFavorite(int day) async {
-    favorites.contains(day) ? favorites.remove(day) : favorites.add(day);
+    final added = !favorites.contains(day);
+    added ? favorites.add(day) : favorites.remove(day);
     notifyListeners();
     await _storage.saveFavorites(favorites);
+    await _activityStore.recordFavoriteChanged(day, added: added);
   }
 
   Future<void> markCompleted(int day) async {
+    final firstCompletion = !completed.contains(day);
     completed.add(day);
     positions[day] = Duration.zero;
     notifyListeners();
     await _storage.saveCompleted(completed);
     await _storage.savePositions(positions);
+    await _activityStore.recordPrayerCompleted(
+      day,
+      firstCompletion: firstCompletion,
+    );
   }
 
   Future<void> savePosition(int day, Duration position) async {
@@ -187,7 +203,9 @@ class AppController extends ChangeNotifier {
     await _storage.savePositions(positions);
   }
 
-  Future<void> requestStoreReview() => _reviewPrompter.requestReview();
+  Future<void> requestStoreReview() async {
+    await _reviewPrompter.requestReview();
+  }
 
   Future<bool> configureReminder({
     required bool enabled,
@@ -201,6 +219,7 @@ class AppController extends ChangeNotifier {
         reminderEnabled = false;
         notificationPermissionDenied = true;
         await _storage.saveReminder(false, time);
+        await _activityStore.recordReminderPermissionDenied();
         notifyListeners();
         return false;
       }
@@ -211,6 +230,7 @@ class AppController extends ChangeNotifier {
       await _reminders.cancel();
     }
     await _storage.saveReminder(reminderEnabled, time);
+    await _activityStore.recordReminderChanged(enabled: reminderEnabled);
     notifyListeners();
     return true;
   }
@@ -227,11 +247,53 @@ class AppController extends ChangeNotifier {
     await _storage.saveTextScale(scale);
   }
 
+  Future<void> recordScreenView(LocalActivityScreen screen) =>
+      _activityStore.recordScreenView(screen);
+
+  Future<void> recordPrayerOpened(int day, {required bool resumed}) =>
+      _activityStore.recordPrayerOpened(day, resumed: resumed);
+
+  Future<void> recordPrayerPlaybackStarted(int day) =>
+      _activityStore.recordPrayerPlaybackStarted(day);
+
+  Future<void> recordPrayerAbandoned(
+    int day, {
+    required int progressPercent,
+    required Duration listeningDuration,
+  }) => _activityStore.recordPrayerAbandoned(
+    day,
+    progressPercent: progressPercent,
+    listeningDuration: listeningDuration,
+  );
+
+  Future<void> recordPrayerListening(int day, Duration listeningDuration) =>
+      _activityStore.recordPrayerListening(day, listeningDuration);
+
+  Future<void> recordAppResumed() async {
+    if (_foregroundStartedAt != null) return;
+    _foregroundStartedAt = _now();
+    await _activityStore.recordAppResume();
+  }
+
+  Future<void> recordAppBackgrounded() async {
+    final startedAt = _foregroundStartedAt;
+    if (startedAt == null) return;
+    _foregroundStartedAt = null;
+    final elapsed = _now().difference(startedAt);
+    if (!elapsed.isNegative) {
+      await _activityStore.recordForegroundDuration(elapsed);
+    }
+  }
+
+  Future<LocalActivityHistory> loadLocalActivityHistory() =>
+      _activityStore.load();
+
   void _subscriptionChanged() => notifyListeners();
 
   Future<void> reset() async {
     await _reminders.cancel();
-    await _storage.reset();
+    _foregroundStartedAt = null;
+    await Future.wait([_storage.reset(), _activityStore.reset()]);
     onboardingComplete = false;
     startDate = null;
     highestUnlockedDay = 1;

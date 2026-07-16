@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'services/content_repository.dart';
 import 'services/app_update_service.dart';
+import 'services/notification_service.dart';
 import 'services/prayer_audio_session.dart';
 import 'services/subscription_service.dart';
 import 'state/app_controller.dart';
@@ -40,6 +41,7 @@ Future<void> main() async {
     ),
     subscriptionService: subscriptionService,
     audioSession: PrayerAudioSession(),
+    reminders: NotificationService(),
   );
   await controller.initialize();
   final updateService = AppUpdateService(

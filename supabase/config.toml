@@ -7,6 +7,12 @@ project_id = "WWJS"
 [functions.google-play-billing]
 verify_jwt = true
 
+[functions.apple-storekit-billing]
+verify_jwt = true
+
+[functions.apple-storekit-notifications]
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.

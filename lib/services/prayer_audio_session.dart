@@ -34,7 +34,7 @@ class PrayerAudioSession {
 
         final mediaItem = MediaItem(
           id: 'prayer-${prayer.day}',
-          album: 'WWJS: What Would Jesus Say?',
+          album: 'WWJS: Pray With Jesus',
           title: 'Day ${prayer.day}: ${prayer.title}',
           displaySubtitle: prayer.scriptureReference,
         );

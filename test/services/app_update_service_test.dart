@@ -50,6 +50,20 @@ void main() {
     expect(await service.availableUpdate(), isNull);
   });
 
+  test('does not prompt again after opening the same update', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = AppUpdateService(
+      repository: _FakeRepository(update),
+      packageInfoLoader: () async => _packageInfo(build: '5'),
+      platform: 'android',
+      androidUpdateInvoker: _noPlayUpdate,
+    );
+
+    await service.markUpdateOpened(update);
+
+    expect(await service.availableUpdate(), isNull);
+  });
+
   test('uses the Google Play update when one is available', () async {
     SharedPreferences.setMockInitialValues({});
     final service = AppUpdateService(
@@ -59,14 +73,16 @@ void main() {
       androidUpdateInvoker: (method, arguments) async => {
         'updateAvailable': true,
         'availableVersionCode': 7,
-        'recommendedType': 'flexible',
       },
     );
 
     final result = await service.availableUpdate();
 
     expect(result?.latestBuild, 7);
-    expect(result?.nativeUpdateType, 'flexible');
+    expect(
+      result?.storeUrl.toString(),
+      'https://play.google.com/store/apps/details?id=com.wwjs.wwjs',
+    );
   });
 
   test('trusts Google Play when it reports an available update', () async {
@@ -78,55 +94,42 @@ void main() {
       androidUpdateInvoker: (method, arguments) async => {
         'updateAvailable': true,
         'availableVersionCode': 10,
-        'recommendedType': 'flexible',
       },
     );
 
     expect(await service.availableUpdate(), isNotNull);
   });
 
-  test('shows a Play update even when an in-app flow is unavailable', () async {
-    SharedPreferences.setMockInitialValues({});
-    final service = AppUpdateService(
-      repository: _FakeRepository(null),
-      packageInfoLoader: () async => _packageInfo(build: '10'),
-      platform: 'android',
-      androidUpdateInvoker: (method, arguments) async => {
-        'updateAvailable': true,
-        'availableVersionCode': 11,
-        'recommendedType': 'none',
-      },
-    );
+  test(
+    'opens the Play Store listing without starting an in-app flow',
+    () async {
+      var nativeInvocationCount = 0;
+      Uri? launchedUrl;
+      final service = AppUpdateService(
+        repository: _FakeRepository(null),
+        platform: 'android',
+        androidUpdateInvoker: (method, arguments) async {
+          nativeInvocationCount += 1;
+          return null;
+        },
+        urlLauncher: (url) async {
+          launchedUrl = url;
+          return true;
+        },
+      );
+      final playUpdate = AppUpdate(
+        platform: 'android',
+        latestBuild: 8,
+        storeUrl: Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.wwjs.wwjs',
+        ),
+      );
 
-    final result = await service.availableUpdate();
-
-    expect(result?.latestBuild, 11);
-    expect(result?.nativeUpdateType, isNull);
-  });
-
-  test('starts the native Google Play update flow', () async {
-    var invokedMethod = '';
-    final service = AppUpdateService(
-      repository: _FakeRepository(null),
-      platform: 'android',
-      androidUpdateInvoker: (method, arguments) async {
-        invokedMethod = method;
-        return {'started': true};
-      },
-      urlLauncher: (_) async => false,
-    );
-    final playUpdate = AppUpdate(
-      platform: 'android',
-      latestBuild: 8,
-      storeUrl: Uri.parse(
-        'https://play.google.com/store/apps/details?id=com.wwjs.wwjs',
-      ),
-      nativeUpdateType: 'flexible',
-    );
-
-    expect(await service.openUpdate(playUpdate), isTrue);
-    expect(invokedMethod, 'startUpdate');
-  });
+      expect(await service.openUpdate(playUpdate), isTrue);
+      expect(nativeInvocationCount, 0);
+      expect(launchedUrl, playUpdate.storeUrl);
+    },
+  );
 }
 
 Future<Map<String, Object?>?> _noPlayUpdate(

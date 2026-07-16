@@ -85,7 +85,7 @@ class _SubscriptionDialogState extends State<_SubscriptionDialog> {
 
   Future<void> _openLegalPage(String path) async {
     await launchUrl(
-      Uri.parse('https://praywithjesus.app/$path'),
+      Uri.parse('https://www.praywithjesus.app/$path'),
       mode: LaunchMode.externalApplication,
     );
   }

@@ -7,11 +7,41 @@ import 'package:wwjs/data/prayers.dart';
 import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/screens/today_screen.dart';
 import 'package:wwjs/services/content_repository.dart';
+import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
 import 'package:wwjs/widgets/brand_wordmark.dart';
 
 void main() {
+  testWidgets('records app foreground time and returns during onboarding', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 16, 8);
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => now,
+    );
+    await controller.initialize();
+    await tester.pumpWidget(WWJSApp(controller: controller));
+
+    now = DateTime(2026, 7, 16, 8, 2);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    var history = await controller.loadLocalActivityHistory();
+    expect(history.total(LocalActivityMetric.foregroundSeconds), 120);
+
+    now = DateTime(2026, 7, 16, 9);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    history = await controller.loadLocalActivityHistory();
+    expect(history.total(LocalActivityMetric.appResume), 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await controller.reset();
+  });
+
   testWidgets('onboarding starts at Day 1', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final controller = AppController(reminders: NoopReminderScheduler());
@@ -25,6 +55,12 @@ void main() {
     expect(find.text('Pray with Jesus'), findsOneWidget);
     expect(find.text('Make it yours'), findsOneWidget);
     expect(find.text('Your journey starts here'), findsOneWidget);
+    expect(
+      find.text(
+        'No account or public streaks. Your prayer progress stays on this device.',
+      ),
+      findsOneWidget,
+    );
     final setupPanelPosition = tester.widget<Transform>(
       find.byKey(const ValueKey('welcome-setup-panel-position')),
     );

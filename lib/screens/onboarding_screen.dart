@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../state/app_controller.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/brand_wordmark.dart';
 import '../widgets/dawn_artwork.dart';
+import '../widgets/tablet_artwork_background.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.controller});
@@ -64,16 +66,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _begin() async {
     setState(() => _busy = true);
-    await widget.controller.finishOnboarding(startingDay: 1);
     if (_setReminder) {
       await widget.controller.configureReminder(enabled: true, time: _time);
     }
+    await widget.controller.finishOnboarding(startingDay: 1);
     if (mounted) setState(() => _busy = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final isTablet = AppLayout.isTablet(context);
+    final panelInset = AppLayout.horizontalInset(context, phoneInset: 16);
+    final heroHeight = isTablet
+        ? (MediaQuery.sizeOf(context).height * .46).clamp(580.0, 640.0)
+        : 350.0;
     final semantic = AppSemanticColors.of(context);
     final wordmarkSecondary = Color.lerp(
       semantic.scriptureText,
@@ -86,17 +93,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         top: false,
         bottom: false,
         child: Stack(
+          fit: isTablet ? StackFit.expand : StackFit.loose,
           children: [
+            if (isTablet)
+              Positioned.fill(
+                child: TabletArtworkBackground(
+                  key: const Key('tablet-onboarding-background'),
+                  assetName: dark
+                      ? 'assets/images/dawn-path-dark.png'
+                      : 'assets/images/dawn-path.png',
+                  preservePortraitComposition: true,
+                  portraitOffsetY: -260,
+                  bottomScrimOpacity: .42,
+                ),
+              ),
             SingleChildScrollView(
               controller: _scrollController,
               child: Column(
                 children: [
                   Stack(
                     children: [
-                      const DawnArtwork(height: 350, useDarkArtwork: true),
+                      if (isTablet)
+                        SizedBox(width: double.infinity, height: heroHeight)
+                      else
+                        const DawnArtwork(height: 350, useDarkArtwork: true),
                       Positioned(
-                        left: 24,
-                        right: 24,
+                        left: isTablet ? panelInset : 24,
+                        right: isTablet ? panelInset : 24,
                         top: MediaQuery.paddingOf(context).top + 18,
                         child: Row(
                           children: [
@@ -183,8 +206,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     key: const ValueKey('welcome-setup-panel-position'),
                     offset: const Offset(0, -50),
                     child: Container(
+                      key: const Key('onboarding-setup-panel'),
                       width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      margin: EdgeInsets.symmetric(horizontal: panelInset),
                       padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
@@ -374,7 +398,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'No account. No streaks. Your activity stays on this device.',
+                            'No account or public streaks. Your prayer progress stays on this device.',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),

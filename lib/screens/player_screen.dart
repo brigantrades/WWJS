@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../core/app_layout.dart';
 import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../models/prayer_content.dart';
@@ -13,6 +14,7 @@ import '../widgets/dawn_artwork.dart';
 import '../widgets/light_from_above_surface.dart';
 import '../widgets/reminder_prompt_modal.dart';
 import '../widgets/subscription_modal.dart';
+import '../widgets/tablet_artwork_background.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({
@@ -48,6 +50,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   bool _showReadAlong = false;
   String? _error;
   int _lastSavedSecond = -1;
+  bool _hasRecordedPlaybackStart = false;
+  bool _hasRecordedAbandonment = false;
+  DateTime? _listeningStartedAt;
+  Duration _listeningDuration = Duration.zero;
 
   @override
   void initState() {
@@ -56,6 +62,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _audioSession = widget.controller.audioSession ?? PrayerAudioSession();
     _position = widget.controller.positions[widget.prayer.day] ?? Duration.zero;
     _duration = widget.prayer.estimatedDuration;
+    unawaited(
+      widget.controller.recordPrayerOpened(
+        widget.prayer.day,
+        resumed: _position > Duration.zero,
+      ),
+    );
     _initialize();
   }
 
@@ -80,6 +92,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       });
       _stateSubscription = _player.playerStateStream.listen((state) {
         if (!mounted) return;
+        _updateListeningState(state.playing);
         setState(() => _playing = state.playing);
         if (state.processingState == ProcessingState.completed) _complete();
       });
@@ -95,7 +108,23 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _togglePlayback() async {
-    _playing ? await _player.pause() : await _player.play();
+    if (_playing) {
+      await _player.pause();
+      _updateListeningState(false);
+      return;
+    }
+
+    _startPlayback();
+  }
+
+  void _startPlayback() {
+    if (!_hasRecordedPlaybackStart) {
+      _hasRecordedPlaybackStart = true;
+      unawaited(
+        widget.controller.recordPrayerPlaybackStarted(widget.prayer.day),
+      );
+    }
+    unawaited(_player.play());
   }
 
   Future<void> _seek(Duration position) async {
@@ -103,6 +132,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ? Duration.zero
         : (position > _duration ? _duration : position);
     await _player.seek(safe);
+  }
+
+  Future<void> _skipBy(Duration delta) async {
+    await _seek(_position + delta);
   }
 
   Future<void> _complete() async {
@@ -113,6 +146,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
     try {
       await _player.pause();
+      _updateListeningState(false);
+      final listeningDuration = _takeListeningDuration();
       if (mounted) {
         setState(() {
           _playing = false;
@@ -120,6 +155,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         });
       }
       await widget.controller.markCompleted(widget.prayer.day);
+      await widget.controller.recordPrayerListening(
+        widget.prayer.day,
+        listeningDuration,
+      );
       if (!mounted) return;
       if (shouldOfferDailyReminder(
         completedDay: widget.prayer.day,
@@ -154,6 +193,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _leave() async {
     await _player.pause();
+    _updateListeningState(false);
+    if (!_didComplete &&
+        _hasRecordedPlaybackStart &&
+        !_hasRecordedAbandonment) {
+      _hasRecordedAbandonment = true;
+      await widget.controller.recordPrayerAbandoned(
+        widget.prayer.day,
+        progressPercent: _progressPercent,
+        listeningDuration: _takeListeningDuration(),
+      );
+    }
     await widget.controller.savePosition(
       widget.prayer.day,
       _didComplete ? Duration.zero : _position,
@@ -170,12 +220,29 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _position = Duration.zero;
       _didComplete = false;
       _error = null;
+      _hasRecordedPlaybackStart = false;
+      _hasRecordedAbandonment = false;
+      _listeningDuration = Duration.zero;
+      _listeningStartedAt = null;
     });
-    await _player.play();
+    _startPlayback();
   }
 
   @override
   void dispose() {
+    _updateListeningState(false);
+    if (!_didComplete &&
+        _hasRecordedPlaybackStart &&
+        !_hasRecordedAbandonment) {
+      _hasRecordedAbandonment = true;
+      unawaited(
+        widget.controller.recordPrayerAbandoned(
+          widget.prayer.day,
+          progressPercent: _progressPercent,
+          listeningDuration: _takeListeningDuration(),
+        ),
+      );
+    }
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _stateSubscription?.cancel();
@@ -187,6 +254,33 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
     if (_ownsAudioSession) unawaited(_audioSession.dispose());
     super.dispose();
+  }
+
+  int get _progressPercent {
+    if (_duration.inMilliseconds <= 0) return 0;
+    return (_position.inMilliseconds * 100 ~/ _duration.inMilliseconds)
+        .clamp(0, 100)
+        .toInt();
+  }
+
+  void _updateListeningState(bool playing) {
+    final now = DateTime.now();
+    if (playing) {
+      _listeningStartedAt ??= now;
+      return;
+    }
+
+    final startedAt = _listeningStartedAt;
+    if (startedAt == null) return;
+    final elapsed = now.difference(startedAt);
+    if (!elapsed.isNegative) _listeningDuration += elapsed;
+    _listeningStartedAt = null;
+  }
+
+  Duration _takeListeningDuration() {
+    final duration = _listeningDuration;
+    _listeningDuration = Duration.zero;
+    return duration;
   }
 
   @override
@@ -220,9 +314,29 @@ class _PlayerScreenState extends State<PlayerScreen> {
           builder: (context, constraints) {
             final mediaQuery = MediaQuery.of(context);
             final dark = Theme.of(context).brightness == Brightness.dark;
-            final heroHeight = (constraints.maxHeight * 0.39).clamp(
-              210.0,
-              350.0,
+            final isTablet = AppLayout.isTablet(context);
+            final tabletSurface = dark
+                ? AppSemanticColors.of(context).appBackground
+                : AppColors.playerIvory;
+            final tabletHeroMax = (constraints.maxHeight - 300).clamp(
+              360.0,
+              560.0,
+            );
+            final heroHeight = isTablet
+                ? (constraints.maxHeight * .42).clamp(360.0, tabletHeroMax)
+                : (constraints.maxHeight * 0.39).clamp(210.0, 350.0);
+            final topInset = AppLayout.horizontalInset(context, phoneInset: 10);
+            final readingInset = AppLayout.horizontalInset(
+              context,
+              phoneInset: 26,
+            );
+            final completionInset = AppLayout.horizontalInset(
+              context,
+              phoneInset: 32,
+            );
+            final controlsInset = AppLayout.horizontalInset(
+              context,
+              phoneInset: 24,
             );
             final glowEndY = (heroHeight + constraints.maxHeight * 0.34).clamp(
               heroHeight,
@@ -231,43 +345,93 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
             return Stack(
               children: [
-                LightFromAboveSurface(
-                  glowOriginY: heroHeight - 96,
-                  glowEndY: glowEndY,
-                ),
+                if (isTablet)
+                  Positioned.fill(
+                    child: TabletArtworkBackground(
+                      key: const Key('tablet-player-background'),
+                      assetName: dark
+                          ? 'assets/images/dawn-path-dark.png'
+                          : 'assets/images/dawn-path.png',
+                      preservePortraitComposition: true,
+                      portraitOffsetY: -260,
+                      bottomScrimOpacity: .68,
+                    ),
+                  )
+                else
+                  LightFromAboveSurface(
+                    glowOriginY: heroHeight - 96,
+                    glowEndY: glowEndY,
+                  ),
+                if (isTablet)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              tabletSurface.withValues(alpha: .12),
+                              tabletSurface.withValues(alpha: .80),
+                              tabletSurface.withValues(alpha: .92),
+                            ],
+                            stops: [
+                              0,
+                              (heroHeight / constraints.maxHeight * .76).clamp(
+                                0.0,
+                                .62,
+                              ),
+                              (heroHeight / constraints.maxHeight).clamp(
+                                .28,
+                                .72,
+                              ),
+                              1,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 SafeArea(
                   top: false,
                   child: Column(
                     children: [
                       SizedBox(
+                        key: isTablet
+                            ? const Key('tablet-player-hero-space')
+                            : null,
                         height: heroHeight,
                         width: double.infinity,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black,
-                                  Colors.black,
-                                  Colors.transparent,
-                                ],
-                                stops: [0, 0.7, 1],
-                              ).createShader(bounds),
-                              blendMode: BlendMode.dstIn,
-                              child: DawnArtwork(
-                                height: heroHeight,
-                                compact: true,
-                                useDarkArtwork: dark,
+                            if (!isTablet)
+                              ShaderMask(
+                                shaderCallback: (bounds) =>
+                                    const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.black,
+                                        Colors.black,
+                                        Colors.transparent,
+                                      ],
+                                      stops: [0, 0.7, 1],
+                                    ).createShader(bounds),
+                                blendMode: BlendMode.dstIn,
+                                child: DawnArtwork(
+                                  height: heroHeight,
+                                  compact: true,
+                                  useDarkArtwork: dark,
+                                ),
                               ),
-                            ),
-                            LightFromAboveHeroTransition(dark: dark),
+                            if (!isTablet)
+                              LightFromAboveHeroTransition(dark: dark),
                             Positioned(
                               top: mediaQuery.padding.top + 4,
-                              left: 10,
-                              right: 10,
+                              left: topInset,
+                              right: topInset,
                               child: Row(
                                 children: [
                                   IconButton.filledTonal(
@@ -315,7 +479,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       if (_didComplete)
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: completionInset,
+                            ),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -371,7 +537,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       else
                         Expanded(
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 26),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: readingInset,
+                            ),
                             child: Column(
                               children: [
                                 const SizedBox(height: 28),
@@ -421,7 +589,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         ),
                       if (_didComplete)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
+                          padding: EdgeInsets.fromLTRB(
+                            controlsInset,
+                            10,
+                            controlsInset,
+                            24,
+                          ),
                           child: Column(
                             children: [
                               FilledButton(
@@ -446,7 +619,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         )
                       else
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 10, 24, 18),
+                          padding: EdgeInsets.fromLTRB(
+                            controlsInset,
+                            10,
+                            controlsInset,
+                            18,
+                          ),
                           child: Column(
                             children: [
                               Slider(
@@ -472,9 +650,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 children: [
                                   IconButton(
                                     tooltip: 'Back 15 seconds',
-                                    onPressed: () => _seek(
-                                      _position - const Duration(seconds: 15),
-                                    ),
+                                    onPressed: () =>
+                                        _skipBy(const Duration(seconds: -15)),
                                     icon: _skipIcon(forward: false),
                                   ),
                                   const SizedBox(width: 26),
@@ -506,9 +683,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   const SizedBox(width: 26),
                                   IconButton(
                                     tooltip: 'Forward 15 seconds',
-                                    onPressed: () => _seek(
-                                      _position + const Duration(seconds: 15),
-                                    ),
+                                    onPressed: () =>
+                                        _skipBy(const Duration(seconds: 15)),
                                     icon: _skipIcon(forward: true),
                                   ),
                                 ],

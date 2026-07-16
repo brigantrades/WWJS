@@ -10,13 +10,11 @@ class AppUpdate {
     required this.platform,
     required this.latestBuild,
     required this.storeUrl,
-    this.nativeUpdateType,
   });
 
   final String platform;
   final int latestBuild;
   final Uri storeUrl;
-  final String? nativeUpdateType;
 }
 
 abstract interface class AppUpdateRepository {
@@ -71,6 +69,7 @@ class AppUpdateService {
   static const _snoozeDuration = Duration(hours: 24);
   static const _snoozedBuildKey = 'update_snoozed_build';
   static const _snoozedAtKey = 'update_snoozed_at';
+  static const _openedBuildKey = 'update_opened_build';
   static const _playStoreUrl =
       'https://play.google.com/store/apps/details?id=com.wwjs.wwjs';
   static const _androidUpdateChannel = MethodChannel('wwjs/app_update');
@@ -110,6 +109,8 @@ class AppUpdateService {
     }
 
     final preferences = await SharedPreferences.getInstance();
+    if (preferences.getInt(_openedBuildKey) == update.latestBuild) return null;
+
     final snoozedBuild = preferences.getInt(_snoozedBuildKey);
     final snoozedAtMillis = preferences.getInt(_snoozedAtKey);
     if (snoozedBuild == update.latestBuild && snoozedAtMillis != null) {
@@ -126,20 +127,12 @@ class AppUpdateService {
     await preferences.setInt(_snoozedAtKey, _now().millisecondsSinceEpoch);
   }
 
-  Future<bool> openUpdate(AppUpdate update) async {
-    final nativeUpdateType = update.nativeUpdateType;
-    if (nativeUpdateType != null) {
-      try {
-        final result = await _androidUpdateInvoker('startUpdate', {
-          'type': nativeUpdateType,
-        });
-        if (result?['started'] == true) return true;
-      } catch (_) {
-        // Fall back to the Play Store listing if the native flow cannot start.
-      }
-    }
-    return _urlLauncher(update.storeUrl);
+  Future<void> markUpdateOpened(AppUpdate update) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setInt(_openedBuildKey, update.latestBuild);
   }
+
+  Future<bool> openUpdate(AppUpdate update) => _urlLauncher(update.storeUrl);
 
   Future<bool> openConfiguredStore() async {
     final platform = _platform;
@@ -171,15 +164,10 @@ class AppUpdateService {
         result?['availableVersionCode']?.toString() ?? '',
       );
       if (latestBuild == null) return null;
-      final recommendedType = result?['recommendedType']?.toString();
       return AppUpdate(
         platform: 'android',
         latestBuild: latestBuild,
         storeUrl: Uri.parse(_playStoreUrl),
-        nativeUpdateType:
-            recommendedType == 'immediate' || recommendedType == 'flexible'
-            ? recommendedType
-            : null,
       );
     } catch (error, stackTrace) {
       debugPrint('Google Play update lookup failed: $error\n$stackTrace');

@@ -9,7 +9,9 @@ class SubscriptionService extends ChangeNotifier {
   SubscriptionService(this._supabase, {InAppPurchase? store})
     : _providedStore = store;
 
-  static const productId = 'wwjs_full_access';
+  static const androidProductId = 'wwjs_full_access';
+  static const appleMonthlyProductId = 'wwjs_full_access_monthly';
+  static const appleYearlyProductId = 'wwjs_full_access_yearly';
   static const monthlyBasePlanId = 'monthly';
   static const yearlyBasePlanId = 'yearly';
 
@@ -32,6 +34,14 @@ class SubscriptionService extends ChangeNotifier {
   bool get isEntitled => _isEntitled;
   DateTime? get expiresAt => _expiresAt;
   String? get errorMessage => _errorMessage;
+
+  bool get _isAndroid =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  bool get _isApple => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  bool get _isSupportedPlatform => _isAndroid || _isApple;
+  String get _billingFunctionName =>
+      _isApple ? 'apple-storekit-billing' : 'google-play-billing';
+  String get _storeName => _isApple ? 'The App Store' : 'Google Play';
 
   bool canPurchase(String basePlanId) =>
       _storeAvailable && _products.containsKey(basePlanId);
@@ -58,14 +68,14 @@ class SubscriptionService extends ChangeNotifier {
     _purchaseSubscription = _store.purchaseStream.listen(
       _handlePurchaseUpdates,
       onError: (Object error, StackTrace stackTrace) {
-        _setError('Google Play billing could not be reached.');
+        _setError('$_storeName billing could not be reached.');
         debugPrint('Purchase stream failed: $error\n$stackTrace');
       },
     );
 
     await refreshEntitlement();
 
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    if (_isSupportedPlatform) {
       try {
         _storeAvailable = await _store.isAvailable();
         if (_storeAvailable) {
@@ -73,7 +83,7 @@ class SubscriptionService extends ChangeNotifier {
           await _store.restorePurchases();
         }
       } catch (error, stackTrace) {
-        debugPrint('Google Play initialization failed: $error\n$stackTrace');
+        debugPrint('$_storeName initialization failed: $error\n$stackTrace');
         _setError('Subscriptions are temporarily unavailable.');
       }
     }
@@ -83,24 +93,34 @@ class SubscriptionService extends ChangeNotifier {
   }
 
   Future<void> _loadProducts() async {
-    final response = await _store.queryProductDetails({productId});
+    final productIds = _isApple
+        ? {appleMonthlyProductId, appleYearlyProductId}
+        : {androidProductId};
+    final response = await _store.queryProductDetails(productIds);
     if (response.error != null) {
       throw StateError(response.error!.message);
     }
 
     for (final product in response.productDetails) {
-      if (product is! GooglePlayProductDetails) continue;
-      final index = product.subscriptionIndex;
-      final offers = product.productDetails.subscriptionOfferDetails;
-      if (index == null || offers == null || index >= offers.length) continue;
-      final offer = offers[index];
-      final existing = _products[offer.basePlanId];
-      if (existing == null || offer.offerId == null) {
-        _products[offer.basePlanId] = product;
+      if (_isApple) {
+        if (product.id == appleMonthlyProductId) {
+          _products[monthlyBasePlanId] = product;
+        } else if (product.id == appleYearlyProductId) {
+          _products[yearlyBasePlanId] = product;
+        }
+      } else if (product is GooglePlayProductDetails) {
+        final index = product.subscriptionIndex;
+        final offers = product.productDetails.subscriptionOfferDetails;
+        if (index == null || offers == null || index >= offers.length) continue;
+        final offer = offers[index];
+        final existing = _products[offer.basePlanId];
+        if (existing == null || offer.offerId == null) {
+          _products[offer.basePlanId] = product;
+        }
       }
     }
 
-    if (response.notFoundIDs.contains(productId) || _products.isEmpty) {
+    if (response.notFoundIDs.isNotEmpty || _products.isEmpty) {
       _setError('The WWJS subscription is not available for this account.');
     }
   }
@@ -125,13 +145,13 @@ class SubscriptionService extends ChangeNotifier {
       );
       if (!started) {
         _purchasePending = false;
-        _setError('Google Play could not start the purchase.');
+        _setError('$_storeName could not start the purchase.');
       }
       return started;
     } catch (error, stackTrace) {
       _purchasePending = false;
       debugPrint('Starting purchase failed: $error\n$stackTrace');
-      _setError('Google Play could not start the purchase.');
+      _setError('$_storeName could not start the purchase.');
       return false;
     }
   }
@@ -139,7 +159,7 @@ class SubscriptionService extends ChangeNotifier {
   Future<void> restorePurchases() async {
     _clearError();
     if (!_storeAvailable) {
-      _setError('Google Play is unavailable right now.');
+      _setError('$_storeName is unavailable right now.');
       return;
     }
     try {
@@ -158,7 +178,7 @@ class SubscriptionService extends ChangeNotifier {
   Future<void> refreshEntitlement() async {
     try {
       final response = await _supabase.functions.invoke(
-        'google-play-billing',
+        _billingFunctionName,
         body: const {'action': 'status'},
       );
       _applyEntitlement(response.data);
@@ -170,9 +190,7 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<void> syncPurchases() async {
     await refreshEntitlement();
-    if (kIsWeb ||
-        defaultTargetPlatform != TargetPlatform.android ||
-        !_storeAvailable) {
+    if (!_isSupportedPlatform || !_storeAvailable) {
       return;
     }
     try {
@@ -184,7 +202,7 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
-      if (purchase.productID != productId) continue;
+      if (!_isKnownProduct(purchase.productID)) continue;
 
       switch (purchase.status) {
         case PurchaseStatus.pending:
@@ -193,7 +211,10 @@ class SubscriptionService extends ChangeNotifier {
           continue;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          await _verifyAndDeliver(purchase);
+          await _verifyAndDeliver(
+            purchase,
+            restored: purchase.status == PurchaseStatus.restored,
+          );
           continue;
         case PurchaseStatus.error:
           _purchasePending = false;
@@ -209,23 +230,33 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
-  Future<void> _verifyAndDeliver(PurchaseDetails purchase) async {
+  Future<void> _verifyAndDeliver(
+    PurchaseDetails purchase, {
+    required bool restored,
+  }) async {
     try {
       final token = purchase.verificationData.serverVerificationData;
       if (token.isEmpty) {
-        throw StateError('Google Play returned no purchase token.');
+        throw StateError('$_storeName returned no purchase verification data.');
       }
       final response = await _supabase.functions.invoke(
-        'google-play-billing',
-        body: {
-          'action': 'verify',
-          'productId': purchase.productID,
-          'purchaseToken': token,
-        },
+        _billingFunctionName,
+        body: _isApple
+            ? {
+                'action': 'verify',
+                'productId': purchase.productID,
+                'signedTransaction': token,
+                'restored': restored,
+              }
+            : {
+                'action': 'verify',
+                'productId': purchase.productID,
+                'purchaseToken': token,
+              },
       );
       _applyEntitlement(response.data);
       if (!_isEntitled) {
-        throw StateError('Google Play did not confirm an active subscription.');
+        throw StateError('$_storeName did not confirm an active subscription.');
       }
       if (purchase.pendingCompletePurchase) {
         await _store.completePurchase(purchase);
@@ -241,6 +272,10 @@ class SubscriptionService extends ChangeNotifier {
       );
     }
   }
+
+  bool _isKnownProduct(String productId) => _isApple
+      ? productId == appleMonthlyProductId || productId == appleYearlyProductId
+      : productId == androidProductId;
 
   void _applyEntitlement(dynamic value) {
     if (value is! Map) return;
