@@ -28,19 +28,64 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _index = 0;
   final List<int> _tabHistory = [];
   bool _checkingForUpdate = false;
+  late int _handledTodayNavigationRequest;
+  bool _returnToTodayScheduled = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _handledTodayNavigationRequest = widget.controller.todayNavigationRequest;
+    widget.controller.addListener(_handleControllerChanged);
     unawaited(widget.controller.recordScreenView(LocalActivityScreen.today));
     _scheduleUpdateCheck();
   }
 
   @override
+  void didUpdateWidget(covariant AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller.removeListener(_handleControllerChanged);
+    _handledTodayNavigationRequest = widget.controller.todayNavigationRequest;
+    widget.controller.addListener(_handleControllerChanged);
+  }
+
+  @override
   void dispose() {
+    widget.controller.removeListener(_handleControllerChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    final request = widget.controller.todayNavigationRequest;
+    if (request == _handledTodayNavigationRequest) return;
+    _handledTodayNavigationRequest = request;
+    if (_returnToTodayScheduled) return;
+    _returnToTodayScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _returnToTodayScheduled = false;
+      if (mounted) _returnToToday();
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  void _returnToToday() {
+    final navigator = Navigator.of(context);
+    final hadPushedRoute = navigator.canPop();
+    final changedTab = _index != 0;
+    if (changedTab || _tabHistory.isNotEmpty) {
+      setState(() {
+        _index = 0;
+        _tabHistory.clear();
+      });
+    }
+    if (hadPushedRoute) {
+      navigator.popUntil((route) => route.isFirst);
+    }
+    if (changedTab || hadPushedRoute) {
+      unawaited(widget.controller.recordScreenView(LocalActivityScreen.today));
+    }
   }
 
   @override

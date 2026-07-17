@@ -49,7 +49,7 @@ Use rounded geometry to feel approachable, but keep the radius hierarchy consist
 
 ## Imagery and brand
 
-- `assets/branding/wwjs-logo.png`: circular sunrise, cross, dark-green hills, and a white winding path.
+- `assets/branding/wwjs-logo.png`: circular dark-green landscape, glowing gold cross, cream border, and a winding gold path.
 - `assets/images/dawn-path.png`: luminous portrait landscape used by `DawnArtwork` for immersive hero regions.
 - `assets/images/prayer-header-watercolor.png`: quiet sage-and-gold watercolor texture suited to devotional headers and restrained decorative use.
 

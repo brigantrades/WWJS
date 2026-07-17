@@ -104,6 +104,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Continue Your\nWalk with Jesus'), findsOneWidget);
   });
+
+  testWidgets('a reminder tap returns to Today and closes the current page', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final reminders = _TestReminderScheduler();
+    final controller = AppController(reminders: reminders);
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.light),
+        home: AppShell(controller: controller),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pump();
+    final shellContext = tester.element(find.byType(AppShell));
+    Navigator.of(shellContext).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('Open page')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Open page'), findsOneWidget);
+
+    reminders.tap();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open page'), findsNothing);
+    expect(find.byIcon(Icons.wb_sunny), findsOneWidget);
+    final activity = await controller.loadLocalActivityHistory();
+    expect(activity.screenViewTotal(LocalActivityScreen.today), 2);
+  });
+}
+
+class _TestReminderScheduler implements ReminderScheduler {
+  VoidCallback? _onReminderTapped;
+
+  @override
+  set onReminderTapped(VoidCallback? handler) {
+    _onReminderTapped = handler;
+  }
+
+  void tap() => _onReminderTapped?.call();
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<bool> requestPermission() async => true;
+
+  @override
+  Future<void> scheduleDaily(TimeOfDay time) async {}
+
+  @override
+  Future<void> cancel() async {}
 }
 
 class _CountingUpdateService extends AppUpdateService {

@@ -10,6 +10,7 @@ import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
+import 'package:wwjs/widgets/brand_logo.dart';
 import 'package:wwjs/widgets/brand_wordmark.dart';
 
 void main() {
@@ -202,6 +203,11 @@ void main() {
     expect(find.byKey(const Key('dark-today-prayer-panel')), findsOneWidget);
     expect(find.byKey(const Key('dark-today-prayer-button')), findsOneWidget);
     expect(find.byKey(const Key('dark-today-wordmark-scrim')), findsOneWidget);
+    final logoBounds = tester.getRect(find.byType(BrandLogo));
+    final scrimBounds = tester.getRect(
+      find.byKey(const Key('dark-today-wordmark-scrim')),
+    );
+    expect(scrimBounds.left, greaterThanOrEqualTo(logoBounds.right + 4));
     final wordmark = tester.widget<BrandWordmark>(find.byType(BrandWordmark));
     expect(
       wordmark.secondaryColor,

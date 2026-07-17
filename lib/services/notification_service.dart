@@ -8,6 +8,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 abstract interface class ReminderScheduler {
+  set onReminderTapped(VoidCallback? handler);
   Future<void> initialize();
   Future<bool> requestPermission();
   Future<void> scheduleDaily(TimeOfDay time);
@@ -15,8 +16,17 @@ abstract interface class ReminderScheduler {
 }
 
 class NotificationService implements ReminderScheduler {
+  static const _dailyReminderId = 730;
+  static const _dailyReminderPayload = 'daily_prayer';
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  VoidCallback? _onReminderTapped;
+
+  @override
+  set onReminderTapped(VoidCallback? handler) {
+    _onReminderTapped = handler;
+  }
 
   @override
   Future<void> initialize() async {
@@ -28,7 +38,16 @@ class NotificationService implements ReminderScheduler {
         requestSoundPermission: false,
       ),
     );
-    await _plugin.initialize(settings: settings);
+    await _plugin.initialize(
+      settings: settings,
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
+    );
+
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final response = launchDetails?.notificationResponse;
+      if (response != null) _handleNotificationResponse(response);
+    }
 
     tz.initializeTimeZones();
     try {
@@ -77,7 +96,7 @@ class NotificationService implements ReminderScheduler {
     }
 
     await _plugin.zonedSchedule(
-      id: 730,
+      id: _dailyReminderId,
       title: 'Your two minutes with Jesus are ready',
       body: 'Step away from distractions and spend a quiet moment with Him.',
       scheduledDate: scheduled,
@@ -94,14 +113,24 @@ class NotificationService implements ReminderScheduler {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: _dailyReminderPayload,
     );
   }
 
+  void _handleNotificationResponse(NotificationResponse response) {
+    if (response.id == _dailyReminderId ||
+        response.payload == _dailyReminderPayload) {
+      _onReminderTapped?.call();
+    }
+  }
+
   @override
-  Future<void> cancel() => _plugin.cancel(id: 730);
+  Future<void> cancel() => _plugin.cancel(id: _dailyReminderId);
 }
 
 class NoopReminderScheduler implements ReminderScheduler {
+  @override
+  set onReminderTapped(VoidCallback? handler) {}
   @override
   Future<void> initialize() async {}
   @override

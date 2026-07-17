@@ -31,6 +31,7 @@ class AppController extends ChangeNotifier {
            contentRepository ?? const BundledContentRepository(),
        _activityStore = activityStore ?? LocalActivityStore(now: now),
        _now = now ?? DateTime.now {
+    _reminders.onReminderTapped = _openTodayFromReminder;
     subscriptionService?.addListener(_subscriptionChanged);
   }
 
@@ -57,6 +58,9 @@ class AppController extends ChangeNotifier {
   bool notificationPermissionDenied = false;
   ThemeMode themeMode = ThemeMode.system;
   double textScale = 1;
+  int _todayNavigationRequest = 0;
+
+  int get todayNavigationRequest => _todayNavigationRequest;
 
   int get prayerCount => prayers.length;
 
@@ -288,6 +292,12 @@ class AppController extends ChangeNotifier {
   Future<LocalActivityHistory> loadLocalActivityHistory() =>
       _activityStore.load();
 
+  void _openTodayFromReminder() {
+    if (_disposed) return;
+    _todayNavigationRequest += 1;
+    notifyListeners();
+  }
+
   void _subscriptionChanged() => notifyListeners();
 
   Future<void> reset() async {
@@ -312,6 +322,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _reminders.onReminderTapped = null;
     subscriptionService?.removeListener(_subscriptionChanged);
     subscriptionService?.dispose();
     if (audioSession != null) unawaited(audioSession!.dispose());

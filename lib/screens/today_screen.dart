@@ -372,7 +372,7 @@ class TodayScreen extends StatelessWidget {
                               Positioned(
                                 top: -16,
                                 bottom: -16,
-                                left: -16,
+                                left: -8,
                                 right: -12,
                                 child: IgnorePointer(
                                   child: ShaderMask(
