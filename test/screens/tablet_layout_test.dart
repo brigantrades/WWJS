@@ -308,4 +308,36 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('phone player fits the complete scripture without scrolling', (
+    tester,
+  ) async {
+    useView(tester, const Size(402, 874));
+    final controller = await createController();
+    await controller.setCurrentDay(7);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.dark),
+        home: PlayerScreen(
+          controller: controller,
+          prayer: controller.todaysPrayer,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final viewport = tester.getRect(
+      find.byKey(const Key('player-scripture-viewport')),
+    );
+    final scripture = tester.getRect(
+      find.text(controller.todaysPrayer.scriptureText),
+    );
+    expect(scripture.top, greaterThanOrEqualTo(viewport.top));
+    expect(scripture.bottom, lessThanOrEqualTo(viewport.bottom));
+    expect(find.byType(SingleChildScrollView), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

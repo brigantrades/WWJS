@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_layout.dart';
@@ -17,10 +19,121 @@ class SettingsScreen extends StatelessWidget {
     super.key,
     required this.controller,
     this.updateService,
+    this.packageInfoLoader,
+    this.referenceNumberProvider,
   });
 
   final AppController controller;
   final AppUpdateService? updateService;
+  final Future<PackageInfo> Function()? packageInfoLoader;
+  final String? Function()? referenceNumberProvider;
+
+  Future<void> _showAppInformation(BuildContext context) async {
+    PackageInfo? packageInfo;
+    try {
+      packageInfo = await (packageInfoLoader ?? PackageInfo.fromPlatform)();
+    } catch (_) {
+      // The dialog still provides the installation reference when available.
+    }
+    if (!context.mounted) return;
+
+    String? referenceNumber;
+    try {
+      referenceNumber =
+          (referenceNumberProvider ??
+                  () => Supabase.instance.client.auth.currentUser?.id)()
+              ?.trim();
+    } catch (_) {
+      // Supabase may still be establishing the anonymous session.
+    }
+    final hasReference = referenceNumber?.isNotEmpty == true;
+    final version = packageInfo == null
+        ? 'Not available'
+        : packageInfo.buildNumber.isEmpty
+        ? packageInfo.version
+        : '${packageInfo.version} (${packageInfo.buildNumber})';
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+        return AlertDialog(
+          title: const Text('App information'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Version',
+                style: Theme.of(dialogContext).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(version, key: const Key('app-version-value')),
+              const SizedBox(height: 24),
+              Text(
+                'Reference number',
+                style: Theme.of(dialogContext).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Use this number if support asks for it.',
+                style: Theme.of(
+                  dialogContext,
+                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        hasReference ? referenceNumber! : 'Not available yet',
+                        key: const Key('reference-number-value'),
+                        style: Theme.of(dialogContext).textTheme.bodySmall
+                            ?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              fontFamily: 'monospace',
+                            ),
+                      ),
+                    ),
+                    if (hasReference)
+                      IconButton(
+                        key: const Key('copy-reference-number'),
+                        tooltip: 'Copy reference number',
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: referenceNumber!),
+                          );
+                          if (!dialogContext.mounted) return;
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            const SnackBar(
+                              content: Text('Reference number copied.'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Done'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _showTestUpdateModal(BuildContext context) async {
     final action = await showUpdateModal(context);
@@ -278,12 +391,19 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               Uri(
                                 scheme: 'mailto',
-                                path: 'support@praywithjesus.app',
+                                path: 'praywithjesusapp@gmail.com',
                                 queryParameters: const {
                                   'subject': 'WWJS Feedback',
                                 },
                               ),
                             ),
+                          ),
+                          const _LightSettingsDivider(indented: true),
+                          _LightSettingsRow(
+                            icon: Icons.apps_outlined,
+                            title: 'App version',
+                            compact: true,
+                            onTap: () => _showAppInformation(context),
                           ),
                         ],
                       ),
@@ -483,12 +603,19 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               Uri(
                                 scheme: 'mailto',
-                                path: 'support@praywithjesus.app',
+                                path: 'praywithjesusapp@gmail.com',
                                 queryParameters: const {
                                   'subject': 'WWJS Feedback',
                                 },
                               ),
                             ),
+                          ),
+                          const _DarkSettingsDivider(indented: true),
+                          _DarkSettingsRow(
+                            icon: Icons.apps_outlined,
+                            title: 'App version',
+                            compact: true,
+                            onTap: () => _showAppInformation(context),
                           ),
                         ],
                       ),

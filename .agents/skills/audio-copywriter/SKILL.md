@@ -1,6 +1,6 @@
 ---
 name: audio-copywriter
-description: Write and refine short spoken-word scripts for the WWJS app so they are ready to paste into ElevenLabs, with natural pacing, intentional pauses, strong flow, and a two-to-three-minute runtime.
+description: Write and refine short spoken-word scripts for the WWJS app so they are ready to paste into ElevenLabs, with natural pacing, intentional pauses, strong flow, and a 2:30-to-2:45 runtime.
 ---
 
 # WWJS Audio Copywriter
@@ -9,8 +9,9 @@ Create warm, clear, reflective spoken-word scripts for the WWJS daily audio expe
 
 ## Core target
 
-- Aim for 2–3 minutes of finished audio.
-- Use 280–420 spoken words as the default range. Adjust for the selected voice and delivery speed rather than padding the script.
+- Aim for 2:30–2:45 of finished audio at the current ElevenLabs speed of 0.86.
+- Use 335–370 spoken words as the default range, and treat 375 words as a ceiling unless a measured generation proves the selected voice can stay within the target. Preserve reflective pauses and remove repeated ideas before compressing the cadence.
+- Use measured production audio to refine estimates. Day 9 established the current baseline: about 420 spoken words with the approved pauses rendered at 3:05 at speed 0.86.
 - Write for the ear: short sentences, concrete language, varied rhythm, and one idea per breath.
 - Keep the emotional arc simple: welcome, reflection, invitation, and gentle close.
 
@@ -63,7 +64,7 @@ Before drafting a numbered day:
 2. Draft for speech, not for the page. Read every sentence aloud mentally and remove wording that feels formal, repetitive, or difficult to say.
 3. Shape the pacing. Use paragraph breaks for thought changes, periods and commas for natural breaths, em dashes for brief turns, and ellipses only for a meaningful hesitation.
 4. Add a small number of short processing pauses within the reflection as well as longer pauses at meaningful structural transitions. Do not place a break tag after every sentence or spoken line.
-5. Check the word count and estimate runtime at roughly 130–150 words per minute. Revise until the script lands near 2–3 minutes.
+5. Check the word count against the current 335–370-word production target. Revise until the script is expected to land between 2:30 and 2:45 at speed 0.86, then use the measured ElevenLabs result to recalibrate future drafts.
 6. Perform a final paste-readiness check: no title, notes, stage directions, citations, or production commentary inside the copy block.
 
 ## ElevenLabs formatting
@@ -116,7 +117,7 @@ Use this as a flexible shape, not a rigid formula:
 
 Before returning copy, verify:
 
-- It is between 280 and 420 words unless the user explicitly requests another length.
+- It is between 335 and 370 words, and no more than 375 words, unless the user explicitly requests another length or a measured generation supports a different count.
 - It can be spoken comfortably without tongue-twisters, dense clauses, or unnecessary numbers and symbols.
 - No paragraph contains several process-worthy ideas that ElevenLabs is likely to rush together; split those ideas into short spoken lines before adding more SSML.
 - Explicit pauses follow the approved Day 1 pattern: structural transitions carry most of the SSML, while punctuation and paragraphs carry ordinary pacing.

@@ -188,6 +188,13 @@ Deno.serve(async (request: Request) => {
     );
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) return json({ error: "Authentication required." }, 401);
+    if (user.app_metadata?.wwjs_premium_override === true) {
+      return json({
+        isEntitled: true,
+        expiresAt: null,
+        productId: "admin_override",
+      });
+    }
 
     const admin = createClient(supabaseUrl, adminKey(), {
       auth: { persistSession: false, autoRefreshToken: false },

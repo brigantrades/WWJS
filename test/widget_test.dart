@@ -148,6 +148,65 @@ void main() {
     expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
   });
 
+  testWidgets('today remains fixed in light and dark themes', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    for (final brightness in Brightness.values) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(brightness),
+          home: TodayScreen(controller: controller),
+        ),
+      );
+
+      final scrollView = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(scrollView.physics, isA<NeverScrollableScrollPhysics>());
+    }
+  });
+
+  testWidgets('dark today panel is fully visible above bottom navigation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(402, 874);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.dark),
+        home: Scaffold(
+          body: TodayScreen(controller: controller),
+          bottomNavigationBar: NavigationBar(
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.wb_sunny), label: 'Today'),
+              NavigationDestination(
+                icon: Icon(Icons.menu_book),
+                label: 'Prayers',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final panel = tester.getRect(
+      find.byKey(const Key('dark-today-prayer-panel')),
+    );
+    final navigation = tester.getRect(find.byType(NavigationBar));
+    expect(panel.bottom, lessThanOrEqualTo(navigation.top));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('begin prayer action has no playback icon', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final controller = AppController(reminders: NoopReminderScheduler());

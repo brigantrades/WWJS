@@ -43,15 +43,18 @@ Future<void> main() async {
     audioSession: PrayerAudioSession(),
     reminders: NotificationService(),
   );
-  await controller.initialize();
+  await (
+    controller.initialize(),
+    _resolveSubscriptionAccess(supabase, subscriptionService),
+  ).wait;
   final updateService = AppUpdateService(
     repository: SupabaseAppUpdateRepository(supabase),
   );
   runApp(WWJSApp(controller: controller, updateService: updateService));
-  unawaited(_initializeSubscriptions(supabase, subscriptionService));
+  unawaited(_initializeSubscriptions(subscriptionService));
 }
 
-Future<void> _initializeSubscriptions(
+Future<void> _resolveSubscriptionAccess(
   SupabaseClient supabase,
   SubscriptionService subscriptionService,
 ) async {
@@ -63,6 +66,12 @@ Future<void> _initializeSubscriptions(
     debugPrint('Anonymous sign-in failed: $error\n$stackTrace');
   }
 
+  await subscriptionService.refreshEntitlement();
+}
+
+Future<void> _initializeSubscriptions(
+  SubscriptionService subscriptionService,
+) async {
   try {
     await subscriptionService.initialize();
   } catch (error, stackTrace) {

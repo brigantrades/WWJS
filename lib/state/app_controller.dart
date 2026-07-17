@@ -71,6 +71,10 @@ class AppController extends ChangeNotifier {
   bool get requiresSubscription =>
       hasCompletedFreeAccess && !hasActiveSubscription;
 
+  bool get shouldShowUpgradePrompt =>
+      requiresSubscription &&
+      subscriptionService?.entitlementCheckComplete != false;
+
   int get highestAccessibleDay => requiresSubscription
       ? freeDayLimit.clamp(0, prayers.length)
       : highestUnlockedDay;

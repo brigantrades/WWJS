@@ -217,7 +217,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.controller.requiresSubscription)
+            if (widget.controller.shouldShowUpgradePrompt)
               UpgradePrompt(
                 onPressed: () async {
                   await showSubscriptionModal(

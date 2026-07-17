@@ -90,12 +90,22 @@ class PrayerContent {
   };
 
   PrayerSection sectionAt(Duration position) {
+    if (sections.isEmpty) {
+      return PrayerSection(
+        type: PrayerSectionType.scripture,
+        label: 'Scripture',
+        text: scriptureText,
+        startsAt: Duration.zero,
+      );
+    }
     PrayerSection current = sections.first;
     for (final section in sections) {
       if (position >= section.startsAt) current = section;
     }
     return current;
   }
+
+  String get scriptureDisplayText => scriptureText;
 
   String transcriptFor(PrayerSectionType type) => switch (type) {
     PrayerSectionType.preparation => preparationText,

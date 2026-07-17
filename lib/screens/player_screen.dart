@@ -291,9 +291,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
         : AppColors.forest;
     final playbackButtonForeground = dark ? AppColors.forest : Colors.white;
     final playbackSection = widget.prayer.sectionAt(_position);
-    final scriptureSection = widget.prayer.sections.firstWhere(
-      (candidate) => candidate.type == PrayerSectionType.scripture,
-    );
     final favorite = widget.controller.favorites.contains(widget.prayer.day);
     final totalMs = _duration.inMilliseconds <= 0
         ? 1
@@ -443,7 +440,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     ),
                                   ),
                                   const Spacer(),
-                                  if (widget.controller.requiresSubscription)
+                                  if (widget.controller.shouldShowUpgradePrompt)
                                     IconButton.filledTonal(
                                       tooltip: 'Upgrade',
                                       onPressed: () async {
@@ -456,7 +453,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       },
                                       icon: const Icon(Icons.lock_open_rounded),
                                     ),
-                                  if (widget.controller.requiresSubscription)
+                                  if (widget.controller.shouldShowUpgradePrompt)
                                     const SizedBox(width: 4),
                                   IconButton.filledTonal(
                                     tooltip: favorite
@@ -536,54 +533,81 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         )
                       else
                         Expanded(
-                          child: SingleChildScrollView(
+                          child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: readingInset,
                             ),
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 28),
-                                Text(
-                                  scriptureSection.text,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineMedium,
-                                ),
-                                const SizedBox(height: 14),
-                                Text(
-                                  widget.prayer.scriptureReference,
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(color: AppColors.sage),
-                                ),
-                                if (_readAlongEnabled)
-                                  AnimatedSize(
-                                    duration:
-                                        MediaQuery.disableAnimationsOf(context)
-                                        ? Duration.zero
-                                        : const Duration(milliseconds: 250),
-                                    child: _showReadAlong
-                                        ? Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 14,
-                                            ),
-                                            child: _ReadAlongText(
-                                              text: widget.prayer.transcriptFor(
-                                                playbackSection.type,
-                                              ),
-                                              position: _position,
-                                              startsAt:
-                                                  playbackSection.startsAt,
-                                              endsAt: sectionEnd,
-                                            ),
-                                          )
-                                        : const SizedBox.shrink(),
+                            child: LayoutBuilder(
+                              key: const Key('player-scripture-viewport'),
+                              builder: (context, readingConstraints) {
+                                final content = Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 28),
+                                    Text(
+                                      widget.prayer.scriptureDisplayText,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.headlineMedium,
+                                    ),
+                                    const SizedBox(height: 14),
+                                    Text(
+                                      widget.prayer.scriptureReference,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(color: AppColors.sage),
+                                    ),
+                                    if (_readAlongEnabled)
+                                      AnimatedSize(
+                                        duration:
+                                            MediaQuery.disableAnimationsOf(
+                                              context,
+                                            )
+                                            ? Duration.zero
+                                            : const Duration(milliseconds: 250),
+                                        child: _showReadAlong
+                                            ? Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 14,
+                                                ),
+                                                child: _ReadAlongText(
+                                                  text: widget.prayer
+                                                      .transcriptFor(
+                                                        playbackSection.type,
+                                                      ),
+                                                  position: _position,
+                                                  startsAt:
+                                                      playbackSection.startsAt,
+                                                  endsAt: sectionEnd,
+                                                ),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
+                                    if (_error != null) ...[
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        _error!,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ],
+                                );
+
+                                if (_readAlongEnabled && _showReadAlong) {
+                                  return SingleChildScrollView(child: content);
+                                }
+
+                                return FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.topCenter,
+                                  child: SizedBox(
+                                    width: readingConstraints.maxWidth,
+                                    child: content,
                                   ),
-                                if (_error != null) ...[
-                                  const SizedBox(height: 16),
-                                  Text(_error!, textAlign: TextAlign.center),
-                                ],
-                              ],
+                                );
+                              },
                             ),
                           ),
                         ),

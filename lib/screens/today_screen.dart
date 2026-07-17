@@ -82,6 +82,7 @@ class TodayScreen extends StatelessWidget {
               420.0,
             );
             final content = SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
               child: Column(
                 children: [
                   Stack(
@@ -277,11 +278,9 @@ class TodayScreen extends StatelessWidget {
                 context,
                 phoneInset: 15,
               );
-              final artworkHeight = (constraints.maxHeight * .52).clamp(
-                360.0,
-                420.0,
-              );
-              final backgroundHeight = artworkHeight * 1.86;
+              final artworkHeight = isTablet
+                  ? (constraints.maxHeight * .52).clamp(360.0, 420.0)
+                  : (constraints.maxHeight * .45).clamp(320.0, 380.0);
 
               return Stack(
                 fit: isTablet ? StackFit.expand : StackFit.loose,
@@ -305,7 +304,7 @@ class TodayScreen extends StatelessWidget {
                       top: -artworkHeight * .30,
                       left: 0,
                       right: 0,
-                      height: backgroundHeight,
+                      bottom: 0,
                       child: ExcludeSemantics(
                         child: Image.asset(
                           'assets/images/dawn-path-dark.png',
@@ -324,11 +323,11 @@ class TodayScreen extends StatelessWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                semantic.appBackground.withValues(alpha: .18),
-                                semantic.appBackground.withValues(alpha: .82),
-                                semantic.appBackground,
+                                semantic.appBackground.withValues(alpha: .12),
+                                semantic.appBackground.withValues(alpha: .62),
+                                semantic.appBackground.withValues(alpha: .90),
                               ],
-                              stops: const [.34, .57, .79, 1],
+                              stops: const [.30, .55, .82, 1],
                             ),
                           ),
                         ),
@@ -336,6 +335,7 @@ class TodayScreen extends StatelessWidget {
                     ),
                   ],
                   SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
                     child: Column(
                       children: [
                         SizedBox(height: artworkHeight),
@@ -469,7 +469,7 @@ class _DarkPrayerPanel extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: horizontalInset),
       padding: const EdgeInsets.fromLTRB(26, 28, 26, 28),
       decoration: BoxDecoration(
-        color: const Color(0xF211211C),
+        color: const Color(0xC911211C),
         borderRadius: BorderRadius.circular(34),
         border: Border.all(color: semantic.subtleBorder),
         boxShadow: [

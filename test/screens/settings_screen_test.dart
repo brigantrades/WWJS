@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wwjs/core/app_theme.dart';
 import 'package:wwjs/screens/settings_screen.dart';
@@ -78,6 +79,47 @@ void main() {
     expect(find.text('Privacy'), findsOneWidget);
     expect(find.text('Rate the App'), findsOneWidget);
     expect(find.text('Send Feedback'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('app information keeps the installation id discreet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppController(reminders: NoopReminderScheduler());
+    await controller.initialize();
+    await controller.setThemeMode(ThemeMode.light);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.light),
+        home: SettingsScreen(
+          controller: controller,
+          packageInfoLoader: () async => PackageInfo(
+            appName: 'WWJS',
+            packageName: 'com.wwjs.wwjs',
+            version: '1.0.16',
+            buildNumber: '18',
+          ),
+          referenceNumberProvider: () => '123e4567-e89b-12d3-a456-426614174000',
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('App version'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('App information'), findsOneWidget);
+    expect(find.text('Version'), findsOneWidget);
+    expect(find.text('1.0.16 (18)'), findsOneWidget);
+    expect(find.text('Reference number'), findsOneWidget);
+    expect(find.text('123e4567-e89b-12d3-a456-426614174000'), findsOneWidget);
+    expect(find.textContaining('UUID'), findsNothing);
+    expect(find.byKey(const Key('copy-reference-number')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

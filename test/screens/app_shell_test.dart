@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wwjs/app.dart';
 import 'package:wwjs/core/app_theme.dart';
+import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/screens/app_shell.dart';
 import 'package:wwjs/services/app_update_service.dart';
+import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
+import 'package:wwjs/services/subscription_service.dart';
 import 'package:wwjs/state/app_controller.dart';
 
 void main() {
@@ -105,6 +110,36 @@ void main() {
     expect(find.text('Continue Your\nWalk with Jesus'), findsOneWidget);
   });
 
+  testWidgets('opens directly on the entitled current day', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    const contentRepository = _TenDayContentRepository();
+    final first = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => DateTime(2026, 7, 11),
+      contentRepository: contentRepository,
+    );
+    await first.initialize();
+    await first.finishOnboarding(startingDay: 7);
+    await first.markCompleted(7);
+
+    final subscriptionService = _LoadingSubscriptionService();
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => DateTime(2026, 7, 13),
+      contentRepository: contentRepository,
+      subscriptionService: subscriptionService,
+    );
+    await controller.initialize();
+    subscriptionService.resolve(entitled: true);
+
+    await tester.pumpWidget(WWJSApp(controller: controller));
+
+    expect(controller.requiresSubscription, isFalse);
+    expect(find.text('Day 9'), findsOneWidget);
+    expect(find.text('Day 7'), findsNothing);
+    expect(find.byKey(const Key('upgrade-prompt')), findsNothing);
+  });
+
   testWidgets('a reminder tap returns to Today and closes the current page', (
     tester,
   ) async {
@@ -163,6 +198,64 @@ class _TestReminderScheduler implements ReminderScheduler {
 
   @override
   Future<void> cancel() async {}
+}
+
+class _LoadingSubscriptionService extends SubscriptionService {
+  _LoadingSubscriptionService()
+    : super(
+        SupabaseClient(
+          'https://example.supabase.co',
+          'test-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ),
+      );
+
+  bool _resolved = false;
+  bool _entitled = false;
+
+  @override
+  bool get loading => !_resolved;
+
+  @override
+  bool get entitlementCheckComplete => _resolved;
+
+  @override
+  bool get isEntitled => _entitled;
+
+  void resolve({required bool entitled}) {
+    _resolved = true;
+    _entitled = entitled;
+    notifyListeners();
+  }
+}
+
+class _TenDayContentRepository implements ContentRepository {
+  const _TenDayContentRepository();
+
+  @override
+  Future<List<PrayerContent>> fetchPublishedPrayers() async => [
+    for (var day = 1; day <= 10; day++)
+      PrayerContent(
+        day: day,
+        title: 'Prayer $day',
+        scriptureReference: 'John 15:4',
+        scriptureText: 'Remain in me.',
+        preparationText: 'Prepare.',
+        reflectionText: 'Reflect.',
+        responsePrayer: 'Amen.',
+        closingText: 'Go in peace.',
+        audioUrl: 'day-$day.mp3',
+        estimatedDuration: const Duration(minutes: 2),
+        sections: const [
+          PrayerSection(
+            type: PrayerSectionType.scripture,
+            label: 'Scripture',
+            text: 'Remain in me.',
+            startsAt: Duration.zero,
+          ),
+        ],
+      ),
+  ];
 }
 
 class _CountingUpdateService extends AppUpdateService {

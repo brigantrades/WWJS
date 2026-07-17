@@ -23,6 +23,8 @@ class SubscriptionService extends ChangeNotifier {
 
   bool _storeAvailable = false;
   bool _loading = true;
+  bool _entitlementCheckComplete = false;
+  bool _entitlementCheckSucceeded = false;
   bool _purchasePending = false;
   bool _isEntitled = false;
   DateTime? _expiresAt;
@@ -30,6 +32,7 @@ class SubscriptionService extends ChangeNotifier {
 
   bool get storeAvailable => _storeAvailable;
   bool get loading => _loading;
+  bool get entitlementCheckComplete => _entitlementCheckComplete;
   bool get purchasePending => _purchasePending;
   bool get isEntitled => _isEntitled;
   DateTime? get expiresAt => _expiresAt;
@@ -73,7 +76,7 @@ class SubscriptionService extends ChangeNotifier {
       },
     );
 
-    await refreshEntitlement();
+    if (!_entitlementCheckSucceeded) await refreshEntitlement();
 
     if (_isSupportedPlatform) {
       try {
@@ -182,9 +185,13 @@ class SubscriptionService extends ChangeNotifier {
         body: const {'action': 'status'},
       );
       _applyEntitlement(response.data);
+      _entitlementCheckSucceeded = true;
     } catch (error, stackTrace) {
       // A temporary status-check failure must not prevent the app from opening.
       debugPrint('Subscription status check failed: $error\n$stackTrace');
+    } finally {
+      _entitlementCheckComplete = true;
+      notifyListeners();
     }
   }
 
