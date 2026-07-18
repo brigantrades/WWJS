@@ -9,6 +9,7 @@ class PrayerCard extends StatelessWidget {
     required this.prayer,
     required this.isFavorite,
     required this.isCompleted,
+    this.showDayChip = false,
     required this.onTap,
     required this.onFavorite,
   });
@@ -16,6 +17,7 @@ class PrayerCard extends StatelessWidget {
   final PrayerContent prayer;
   final bool isFavorite;
   final bool isCompleted;
+  final bool showDayChip;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
 
@@ -53,6 +55,30 @@ class PrayerCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (showDayChip) ...[
+                        ExcludeSemantics(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: semantic.controlSurface,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: semantic.subtleBorder),
+                            ),
+                            child: Text(
+                              'Day ${prayer.day}',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: semantic.interactiveForeground,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Wrap(
                         spacing: 8,
                         runSpacing: 4,

@@ -107,15 +107,7 @@ class AppController extends ChangeNotifier {
     themeMode = snapshot.themeMode;
     textScale = snapshot.textScale;
 
-    if (onboardingComplete && startDate != null) {
-      highestUnlockedDay = calculateUnlockedDay(
-        startDate: startDate!,
-        today: _now(),
-        previousHighest: highestUnlockedDay,
-        contentCount: prayers.length,
-      );
-      await _storage.saveHighestUnlocked(highestUnlockedDay);
-    }
+    await _syncJourneyProgress();
     await _activityStore.recordAppLaunch();
     _foregroundStartedAt = _now();
     unawaited(preloadTodayAudio());
@@ -133,18 +125,7 @@ class AppController extends ChangeNotifier {
       if (_disposed || refreshed.isEmpty) return;
 
       prayers = refreshed;
-      if (onboardingComplete && startDate != null) {
-        final refreshedHighest = calculateUnlockedDay(
-          startDate: startDate!,
-          today: _now(),
-          previousHighest: highestUnlockedDay,
-          contentCount: prayers.length,
-        );
-        if (refreshedHighest != highestUnlockedDay) {
-          highestUnlockedDay = refreshedHighest;
-          await _storage.saveHighestUnlocked(highestUnlockedDay);
-        }
-      }
+      await _syncJourneyProgress();
       if (_disposed) return;
       notifyListeners();
       unawaited(preloadTodayAudio());
@@ -169,6 +150,7 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = day;
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
+    await _syncJourneyProgress();
     await _activityStore.recordOnboardingCompleted(startingDay: day);
     notifyListeners();
     unawaited(preloadTodayAudio());
@@ -180,6 +162,7 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = day;
     await _storage.saveOnboarding(startDate!);
     await _storage.saveHighestUnlocked(day);
+    await _syncJourneyProgress();
     await _activityStore.recordJourneyDayChanged(day);
     notifyListeners();
     unawaited(preloadTodayAudio());
@@ -278,9 +261,47 @@ class AppController extends ChangeNotifier {
       _activityStore.recordPrayerListening(day, listeningDuration);
 
   Future<void> recordAppResumed() async {
+    final journeyChanged = await _syncJourneyProgress();
+    if (journeyChanged && !_disposed) {
+      notifyListeners();
+      unawaited(preloadTodayAudio());
+    }
     if (_foregroundStartedAt != null) return;
     _foregroundStartedAt = _now();
     await _activityStore.recordAppResume();
+  }
+
+  Future<bool> _syncJourneyProgress() async {
+    if (!onboardingComplete || startDate == null || prayers.isEmpty) {
+      return false;
+    }
+
+    final unlockedDay = calculateUnlockedDay(
+      startDate: startDate!,
+      today: _now(),
+      previousHighest: highestUnlockedDay,
+      contentCount: prayers.length,
+    );
+    final unlockedChanged = unlockedDay != highestUnlockedDay;
+    highestUnlockedDay = unlockedDay;
+
+    final completedCount = completed.length;
+    completed.addAll(
+      prayers
+          .take((unlockedDay - 1).clamp(0, prayers.length))
+          .map((prayer) => prayer.day),
+    );
+    final completedChanged = completed.length != completedCount;
+
+    final writes = <Future<void>>[];
+    if (unlockedChanged) {
+      writes.add(_storage.saveHighestUnlocked(highestUnlockedDay));
+    }
+    if (completedChanged) {
+      writes.add(_storage.saveCompleted(completed));
+    }
+    await Future.wait(writes);
+    return unlockedChanged || completedChanged;
   }
 
   Future<void> recordAppBackgrounded() async {

@@ -1,0 +1,185 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e3]:
+    - link "WWJS home" [ref=e4] [cursor=pointer]:
+      - /url: index.html
+      - img "WWJS sunrise and cross logo" [ref=e5]
+      - generic [ref=e6]:
+        - strong [ref=e7]: WWJS
+        - generic [ref=e8]: What Would Jesus Say?
+    - navigation "Legal navigation" [ref=e9]:
+      - link "Home" [ref=e10] [cursor=pointer]:
+        - /url: index.html
+      - link "Support" [ref=e11] [cursor=pointer]:
+        - /url: support.html
+      - link "Privacy" [ref=e12] [cursor=pointer]:
+        - /url: privacy.html
+      - link "Terms" [ref=e13] [cursor=pointer]:
+        - /url: terms.html
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - paragraph [ref=e16]: YOUR PRIVACY
+      - heading "Privacy Policy" [level=1] [ref=e17]
+      - paragraph [ref=e18]: WWJS is designed to support a private daily prayer rhythm. This policy explains what information is stored on your device, what may be processed when the app connects online, and the choices available to you.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - strong [ref=e21]: "Effective:"
+          - text: July 16, 2026
+        - generic [ref=e22]:
+          - strong [ref=e23]: "Last updated:"
+          - text: July 16, 2026
+    - generic [ref=e24]:
+      - complementary "Privacy Policy contents" [ref=e25]:
+        - strong [ref=e26]: On this page
+        - list [ref=e27]:
+          - listitem [ref=e28]:
+            - link "Who we are" [ref=e29] [cursor=pointer]:
+              - /url: "#who-we-are"
+          - listitem [ref=e30]:
+            - link "Scope" [ref=e31] [cursor=pointer]:
+              - /url: "#scope"
+          - listitem [ref=e32]:
+            - link "Information we handle" [ref=e33] [cursor=pointer]:
+              - /url: "#information"
+          - listitem [ref=e34]:
+            - link "How we use information" [ref=e35] [cursor=pointer]:
+              - /url: "#use"
+          - listitem [ref=e36]:
+            - link "How information is shared" [ref=e37] [cursor=pointer]:
+              - /url: "#sharing"
+          - listitem [ref=e38]:
+            - link "Retention and deletion" [ref=e39] [cursor=pointer]:
+              - /url: "#retention"
+          - listitem [ref=e40]:
+            - link "Your choices and rights" [ref=e41] [cursor=pointer]:
+              - /url: "#rights"
+          - listitem [ref=e42]:
+            - link "Children’s privacy" [ref=e43] [cursor=pointer]:
+              - /url: "#children"
+          - listitem [ref=e44]:
+            - link "Security and transfers" [ref=e45] [cursor=pointer]:
+              - /url: "#security"
+          - listitem [ref=e46]:
+            - link "Changes and contact" [ref=e47] [cursor=pointer]:
+              - /url: "#changes"
+      - article [ref=e48]:
+        - paragraph [ref=e49]: "The short version: WWJS does not require an account, does not sell personal information, and does not use advertising trackers. Your favorites, completed prayers, preferences, playback progress, and a limited activity history are stored in the app on your device. WWJS does not use third-party app analytics or send your prayer activity or app-usage events."
+        - generic [ref=e50]:
+          - heading "1. Who we are" [level=2] [ref=e51]
+          - paragraph [ref=e52]: WWJS (“WWJS,” “we,” “us,” or “our”) provides the What Would Jesus Say? mobile application, the praywithjesus.app website, and related services (together, the “Services”).
+          - paragraph [ref=e53]:
+            - text: Questions about this policy or our privacy practices may be sent to
+            - link "praywithjesusapp@gmail.com" [ref=e54] [cursor=pointer]:
+              - /url: mailto:praywithjesusapp@gmail.com
+            - text: .
+        - generic [ref=e55]:
+          - heading "2. Scope" [level=2] [ref=e56]
+          - paragraph [ref=e57]: This policy applies when you use the WWJS app, visit our website, contact us, or otherwise interact with the Services. It does not govern third-party websites, app stores, operating systems, or services that have their own privacy policies.
+        - generic [ref=e58]:
+          - heading "3. Information we handle" [level=2] [ref=e59]
+          - heading "Information stored on your device" [level=3] [ref=e60]
+          - paragraph [ref=e61]: "WWJS stores the following information locally so the app can remember your prayer rhythm and preferences:"
+          - list [ref=e62]:
+            - listitem [ref=e63]: whether onboarding is complete and the date you began;
+            - listitem [ref=e64]: your current and highest unlocked prayer day;
+            - listitem [ref=e65]: favorite and completed prayer days;
+            - listitem [ref=e66]: audio playback positions;
+            - listitem [ref=e67]: limited, aggregate activity history, including active days, screen views, prayer opens, playback starts, completions, listening time, and preference changes;
+            - listitem [ref=e68]: daily reminder settings and your chosen reminder time;
+            - listitem [ref=e69]: theme and text-size preferences; and
+            - listitem [ref=e70]: temporary update-reminder preferences.
+          - paragraph [ref=e71]: This information is not associated with a WWJS account or device identifier because the app does not require account creation. We do not receive or have access to it. It is deleted when you reset the app, clear app data, or uninstall it. Your operating system may include local app data in a device backup according to your platform and backup settings.
+          - heading "App analytics" [level=3] [ref=e72]
+          - paragraph [ref=e73]: WWJS does not include third-party app analytics and does not send prayer activity, completion status, favorites, playback behavior, app visits, or similar usage events to us or an analytics provider. Your locally stored prayer activity remains on your device as described above.
+          - paragraph [ref=e74]: Apple and Google may independently process and provide aggregate app-store information, such as download, crash, and performance statistics, depending on their services and your platform settings. That processing is performed by the platform provider under its own terms and privacy policy, not by analytics code in WWJS.
+          - heading "Content and network requests" [level=3] [ref=e75]
+          - paragraph [ref=e76]: The app connects to our content infrastructure to retrieve published prayer text, audio, and app-update information. Like most online services, our hosting and content-delivery providers may automatically receive technical information needed to serve those requests, such as an IP address, request time, requested file, device or browser type, operating system, and basic security logs. We use this information to deliver and protect the Services, not to build advertising profiles.
+          - heading "Notifications and device permissions" [level=3] [ref=e77]
+          - paragraph [ref=e78]: If you choose a daily reminder, WWJS asks for notification permission and schedules the reminder locally on your device. You can decline permission or disable reminders at any time in the app or your device settings. WWJS does not access your contacts, photos, camera, microphone, or precise location for this feature.
+          - heading "Purchases" [level=3] [ref=e79]
+          - paragraph [ref=e80]: If paid plans or in-app purchases are offered, the Apple App Store or Google Play processes the transaction. We do not receive your full payment-card details. We may receive limited purchase information, such as product, subscription status, transaction confirmation, country, and entitlement status, as needed to provide purchased features and support.
+          - heading "Website and communications" [level=3] [ref=e81]
+          - paragraph [ref=e82]: Our public website does not currently use advertising cookies or third-party analytics trackers. Our hosting provider may maintain standard server logs for delivery, reliability, and security. If you contact us, we receive the information you choose to include, such as your email address and message.
+        - generic [ref=e83]:
+          - heading "4. How we use information" [level=2] [ref=e84]
+          - paragraph [ref=e85]: "We use information only as reasonably necessary to:"
+          - list [ref=e86]:
+            - listitem [ref=e87]: provide prayer content, audio playback, and app features;
+            - listitem [ref=e88]: remember preferences and progress on your device;
+            - listitem [ref=e89]: schedule reminders you request;
+            - listitem [ref=e90]: deliver updates and maintain compatibility;
+            - listitem [ref=e91]: protect the Services, prevent abuse, and diagnose problems;
+            - listitem [ref=e92]: process purchases and restore entitlements, if applicable;
+            - listitem [ref=e93]: respond to support requests; and
+            - listitem [ref=e94]: comply with applicable law and enforce our terms.
+          - heading "Legal bases for certain regions" [level=3] [ref=e95]
+          - paragraph [ref=e96]: Where the laws of the European Economic Area, United Kingdom, or Switzerland apply, our legal bases may include performing our contract with you, our legitimate interests in operating and securing the Services, your consent when requested, and compliance with legal obligations. You may withdraw consent at any time, without affecting earlier lawful processing.
+        - generic [ref=e97]:
+          - heading "5. How information is shared" [level=2] [ref=e98]
+          - paragraph [ref=e99]: "We do not sell personal information. We may disclose information:"
+          - list [ref=e100]:
+            - listitem [ref=e101]:
+              - strong [ref=e102]: To service providers.
+              - text: Infrastructure providers, including Supabase, may process limited technical information to host and deliver prayer content, audio, and update configuration.
+            - listitem [ref=e103]:
+              - strong [ref=e104]: To app stores and platform providers.
+              - text: Apple, Google, and device operating systems process downloads, purchases, notifications, updates, and related platform services and may independently provide aggregate app-store statistics under their own terms and privacy policies.
+            - listitem [ref=e105]:
+              - strong [ref=e106]: For legal and safety reasons.
+              - text: We may disclose information when reasonably necessary to comply with law, enforce our rights, respond to lawful requests, or protect users and the public.
+            - listitem [ref=e107]:
+              - strong [ref=e108]: As part of a business change.
+              - text: Information may be transferred in connection with a merger, financing, reorganization, or sale of all or part of the Services, subject to appropriate notice and protections where required.
+          - paragraph [ref=e109]: We require service providers to use information only for the services they provide to us and to protect it appropriately.
+        - generic [ref=e110]:
+          - heading "6. Retention and deletion" [level=2] [ref=e111]
+          - paragraph [ref=e112]: Local app information remains on your device until you reset the app, clear its data, or uninstall it. You can use the reset option in Settings to remove saved WWJS preferences and prayer progress.
+          - paragraph [ref=e113]: Technical server logs and support communications are retained only as long as reasonably necessary for security, reliability, legal compliance, and support. Retention periods may vary based on the record and the provider that processes it. We may retain information longer when required by law or needed to establish, exercise, or defend legal claims.
+        - generic [ref=e114]:
+          - heading "7. Your choices and rights" [level=2] [ref=e115]
+          - paragraph [ref=e116]: "You may:"
+          - list [ref=e117]:
+            - listitem [ref=e118]: decline or revoke notification permission;
+            - listitem [ref=e119]: turn off daily reminders;
+            - listitem [ref=e120]: reset locally stored app information in Settings;
+            - listitem [ref=e121]: clear app data or uninstall the app; and
+            - listitem [ref=e122]: contact us about information provided in a support request.
+          - paragraph [ref=e123]: Depending on where you live, you may also have rights to access, correct, delete, restrict, or object to certain processing; receive a portable copy of certain information; withdraw consent; or appeal a decision concerning a privacy request. You may also complain to your local data-protection authority.
+          - paragraph [ref=e124]:
+            - text: To make a request, email
+            - link "praywithjesusapp@gmail.com" [ref=e125] [cursor=pointer]:
+              - /url: mailto:praywithjesusapp@gmail.com
+            - text: . We may need to verify your request. Because WWJS does not use accounts and most prayer activity stays only on your device, we may not possess information that can be linked back to you.
+        - generic [ref=e126]:
+          - heading "8. Children’s privacy" [level=2] [ref=e127]
+          - paragraph [ref=e128]: The Services are intended for a general audience and are not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided personal information to us, contact us so we can review and, where appropriate, delete it. A parent or guardian should supervise a minor’s use of the Services when required by local law.
+        - generic [ref=e129]:
+          - heading "9. Security and international transfers" [level=2] [ref=e130]
+          - paragraph [ref=e131]: We use reasonable administrative, technical, and organizational safeguards designed to protect information. No system or method of transmission is completely secure, so we cannot guarantee absolute security.
+          - paragraph [ref=e132]: Our service providers may process information in countries other than where you live. Where required, we use legally recognized transfer mechanisms and contractual protections. Local privacy laws in those countries may differ from those in your jurisdiction.
+        - generic [ref=e133]:
+          - heading "10. Changes and contact" [level=2] [ref=e134]
+          - paragraph [ref=e135]: We may update this policy when the Services or legal requirements change. We will post the revised policy here and update the date at the top. If a change is material, we may provide additional notice in the app or through another appropriate channel.
+          - paragraph [ref=e137]:
+            - strong [ref=e138]: Privacy questions or requests
+            - text: WWJS
+            - link "praywithjesusapp@gmail.com" [ref=e139] [cursor=pointer]:
+              - /url: mailto:praywithjesusapp@gmail.com
+            - link "praywithjesus.app" [ref=e140] [cursor=pointer]:
+              - /url: https://praywithjesus.app/
+  - contentinfo [ref=e141]:
+    - link "WWJS home" [ref=e142] [cursor=pointer]:
+      - /url: index.html
+      - generic [ref=e143]:
+        - strong [ref=e144]: WWJS
+        - generic [ref=e145]: Pray with Jesus
+    - generic [ref=e146]:
+      - generic "Legal" [ref=e147]:
+        - link "Support" [ref=e148] [cursor=pointer]:
+          - /url: support.html
+        - link "Privacy Policy" [ref=e149] [cursor=pointer]:
+          - /url: privacy.html
+        - link "Terms & Conditions" [ref=e150] [cursor=pointer]:
+          - /url: terms.html
+      - paragraph [ref=e151]: © 2026 WWJS. A quiet daily rhythm with Jesus.

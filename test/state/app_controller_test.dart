@@ -62,6 +62,37 @@ void main() {
     expect(restored.highestUnlockedDay, 3);
   });
 
+  test('skipped calendar days become completed and today advances', () async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 11, 8);
+    const contentRepository = _TenDayContentRepository();
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => now,
+      contentRepository: contentRepository,
+    );
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    now = DateTime(2026, 7, 13, 8);
+    await controller.recordAppBackgrounded();
+    await controller.recordAppResumed();
+
+    expect(controller.todaysPrayer.day, 3);
+    expect(controller.highestUnlockedDay, 3);
+    expect(controller.completed, containsAll(<int>[1, 2]));
+    expect(controller.completed, isNot(contains(3)));
+
+    final restored = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => now,
+      contentRepository: contentRepository,
+    );
+    await restored.initialize();
+    expect(restored.todaysPrayer.day, 3);
+    expect(restored.completed, containsAll(<int>[1, 2]));
+  });
+
   test('keeps Day 7 current after free access is completed', () async {
     SharedPreferences.setMockInitialValues({});
     const contentRepository = _TenDayContentRepository();

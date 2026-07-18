@@ -70,6 +70,7 @@ class PrayerListScreen extends StatelessWidget {
           prayer: prayer,
           isFavorite: controller.favorites.contains(prayer.day),
           isCompleted: controller.completed.contains(prayer.day),
+          showDayChip: filter == _PrayerFilter.completed,
           onTap: () => _open(context, prayer),
           onFavorite: () => controller.toggleFavorite(prayer.day),
         );
@@ -255,7 +256,7 @@ class PrayerListScreen extends StatelessWidget {
                               ),
                               tabs: [
                                 filterTab('Favorites'),
-                                filterTab('Completed'),
+                                filterTab('Past Prayers'),
                               ],
                             ),
                           ),
@@ -336,7 +337,7 @@ class _CompletedEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 26),
             Text(
-              'Completed prayers\nwill appear here',
+              'Past prayers\nwill appear here',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineMedium,
             ),

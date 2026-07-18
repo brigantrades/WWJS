@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wwjs/core/app_theme.dart';
+import 'package:wwjs/models/prayer_content.dart';
 import 'package:wwjs/screens/prayer_list_screen.dart';
+import 'package:wwjs/services/content_repository.dart';
 import 'package:wwjs/services/local_activity_store.dart';
 import 'package:wwjs/services/notification_service.dart';
 import 'package:wwjs/state/app_controller.dart';
@@ -196,4 +198,64 @@ void main() {
       1,
     );
   });
+
+  testWidgets('passed days appear in the Past Prayers section', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 11, 8);
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => now,
+      contentRepository: const _ThreeDayContentRepository(),
+    );
+    await controller.initialize();
+    await controller.finishOnboarding();
+    now = DateTime(2026, 7, 13, 8);
+    await controller.recordAppBackgrounded();
+    await controller.recordAppResumed();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(Brightness.light),
+        home: PrayerListScreen(controller: controller),
+      ),
+    );
+    await tester.tap(find.text('Past Prayers'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrayerCard), findsNWidgets(2));
+    expect(find.text('Day 1'), findsOneWidget);
+    expect(find.text('Day 2'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'Day 1, completed')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'Day 2, completed')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'Day 3, completed')), findsNothing);
+  });
+}
+
+class _ThreeDayContentRepository implements ContentRepository {
+  const _ThreeDayContentRepository();
+
+  @override
+  Future<List<PrayerContent>> fetchPublishedPrayers() async => [
+    for (var day = 1; day <= 3; day++)
+      PrayerContent(
+        day: day,
+        title: 'Prayer $day',
+        scriptureReference: 'John 15:4',
+        scriptureText: 'Remain in me.',
+        preparationText: 'Prepare.',
+        reflectionText: 'Reflect.',
+        responsePrayer: 'Amen.',
+        closingText: 'Go in peace.',
+        audioUrl: 'day-$day.mp3',
+        estimatedDuration: const Duration(minutes: 2),
+        sections: const [
+          PrayerSection(
+            type: PrayerSectionType.scripture,
+            label: 'Scripture',
+            text: 'Remain in me.',
+            startsAt: Duration.zero,
+          ),
+        ],
+      ),
+  ];
 }

@@ -12,7 +12,37 @@
     <link rel="icon" type="image/png" href="favicon.png?v=4">
     <link rel="apple-touch-icon" href="icons/Icon-192.png?v=4">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="legal.css">
+    <link rel="stylesheet" href="legal.css?v=20260717-2">
+    <style>
+      /* Critical contrast fallback in case the shared stylesheet is cached. */
+      .legal-page .legal-toc,
+      .legal-page .legal-document {
+        border-color: #465d51;
+        background: rgba(12, 23, 20, 0.96);
+        color: #f4ead6;
+      }
+      .legal-page .legal-toc strong,
+      .legal-page .legal-document h2,
+      .legal-page .legal-document h3,
+      .legal-page .legal-document a,
+      .legal-page .legal-contact a {
+        color: #f2e4c8;
+      }
+      .legal-page .legal-toc a,
+      .legal-page .legal-document p,
+      .legal-page .legal-document li {
+        color: #c6c2b5;
+      }
+      .legal-page .legal-notice {
+        border-left-color: #b8a66f;
+        background: #314437;
+        color: #f4ead6;
+      }
+      .legal-page .legal-contact {
+        border: 1px solid #465d51;
+        background: #293b34;
+      }
+    </style>
     <title>Support — WWJS</title>
   </head>
   <body class="legal-page" id="top">
