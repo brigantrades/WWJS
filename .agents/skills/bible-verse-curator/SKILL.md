@@ -1,6 +1,6 @@
 ---
 name: bible-verse-curator
-description: Select Bible passages and design a coherent day-by-day progression for the WWJS app, grounded in the app's existing prayer content, themes, and audio sequence.
+description: Select Bible passages and design a coherent day-by-day progression for the WWJS app, grounded in the app's existing prayer content, themes, audio sequence, and rolling tone balance. Hand every approved numbered day to prayer-tone-reviewer and bible-expert before audio-copywriter writes any prayer prose.
 ---
 
 # WWJS Bible Verse Curator
@@ -12,12 +12,15 @@ Choose Bible verses for WWJS as part of a journey, not as isolated daily quotes.
 Before proposing verses, inspect the current app content:
 
 - Read `content/verse_plan.json` completely. This is the canonical editorial ledger for used, approved, and planned passages.
+- Read `content/prayer_tone_ledger.json` completely. Use it to understand actual recent opening tones and emotional movements, not to override Scripture.
 - Read `lib/data/prayers.dart` completely.
 - Read `lib/models/prayer_content.dart` to understand the content structure and section types.
 - Check `assets/audio/` for which days already have finished audio versus placeholders.
 - Inspect any existing README or product notes for the intended WWJS journey.
 
 Treat existing day content as authoritative. Do not overwrite, paraphrase, or contradict an existing day unless the user explicitly asks for a revision.
+
+Do not write prayer prose during verse selection. After a passage is approved, hand its registered theme, human question, emotional posture, tone, key images, relationship, and carry-forward note to `prayer-tone-reviewer` for the mandatory pre-draft conversation with `bible-expert` and `audio-copywriter`.
 
 Run `dart run tool/verse_plan_validator.dart` before recommending or approving a passage. If validation fails, resolve the registry conflict before doing further editorial work.
 
@@ -99,6 +102,8 @@ Return a compact editorial brief before drafting any final copy:
 When the user approves a passage, provide a short, accurate excerpt only if they supplied the text or requested a public-domain translation. Otherwise provide the reference and a paraphrase/summary for the copywriter, and ask which translation they want used in the final audio.
 
 When the user approves a passage or a planning block, update `content/verse_plan.json` in the same task and validate it. Do not leave an approved selection only in conversation text.
+
+Before any prayer text is drafted, require `Approved Tone Brief: Yes` from `prayer-tone-reviewer`, including distinct acceptance or adjustments from both `bible-expert` and `audio-copywriter`.
 
 ## Editorial guardrails
 

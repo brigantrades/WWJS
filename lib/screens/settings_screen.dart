@@ -28,6 +28,8 @@ class SettingsScreen extends StatelessWidget {
   final Future<PackageInfo> Function()? packageInfoLoader;
   final String? Function()? referenceNumberProvider;
 
+  bool get _showCurrentPrayerDaySetting => false;
+
   Future<void> _showAppInformation(BuildContext context) async {
     PackageInfo? packageInfo;
     try {
@@ -329,13 +331,15 @@ class SettingsScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const _LightSettingsDivider(),
-                          _LightSettingsRow(
-                            icon: Icons.calendar_month_outlined,
-                            title: 'Current prayer day',
-                            value: 'Day ${controller.highestUnlockedDay}',
-                            onTap: () => _chooseCurrentDay(context),
-                          ),
+                          if (_showCurrentPrayerDaySetting) ...[
+                            const _LightSettingsDivider(),
+                            _LightSettingsRow(
+                              icon: Icons.calendar_month_outlined,
+                              title: 'Current prayer day',
+                              value: 'Day ${controller.highestUnlockedDay}',
+                              onTap: () => _chooseCurrentDay(context),
+                            ),
+                          ],
                         ],
                       ),
                       const _LightSectionLabel(text: 'APPEARANCE'),
@@ -538,13 +542,15 @@ class SettingsScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const _DarkSettingsDivider(),
-                          _DarkSettingsRow(
-                            icon: Icons.calendar_month_outlined,
-                            title: 'Current prayer day',
-                            value: 'Day ${controller.highestUnlockedDay}',
-                            onTap: () => _chooseCurrentDay(context),
-                          ),
+                          if (_showCurrentPrayerDaySetting) ...[
+                            const _DarkSettingsDivider(),
+                            _DarkSettingsRow(
+                              icon: Icons.calendar_month_outlined,
+                              title: 'Current prayer day',
+                              value: 'Day ${controller.highestUnlockedDay}',
+                              onTap: () => _chooseCurrentDay(context),
+                            ),
+                          ],
                         ],
                       ),
                       const _DarkSectionLabel(text: 'APPEARANCE'),

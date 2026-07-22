@@ -27,6 +27,7 @@ void main() {
     expect(find.byKey(const Key('light-settings-header')), findsOneWidget);
     expect(find.byKey(const Key('dark-settings-screen')), findsNothing);
     expect(find.text('Daily reminder'), findsOneWidget);
+    expect(find.text('Current prayer day'), findsNothing);
     expect(find.byType(DropdownButton<ThemeMode>), findsNothing);
   });
 
@@ -64,7 +65,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Daily reminder'), findsOneWidget);
-    expect(find.text('Day 2'), findsOneWidget);
+    expect(find.text('Current prayer day'), findsNothing);
+    expect(find.text('Day 2'), findsNothing);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.byType(DropdownButton<ThemeMode>), findsNothing);
     expect(find.byKey(const Key('light-settings-screen')), findsNothing);

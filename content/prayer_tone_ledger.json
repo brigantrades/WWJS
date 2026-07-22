@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "purpose": "Track the actual emotional tone and movement of WWJS prayers so new days remain caring, credible, varied, and balanced across the sequence.",
+  "rolling_window_days": 7,
+  "rules": {
+    "maximum_consecutive_hardship_led_openings": 2,
+    "final_third_should_be_lighter_when_supported": true,
+    "preserve_rejected_patterns": true,
+    "pass_requires_tone_and_bible_review_of_same_version": true
+  },
+  "profiles": [
+    {
+      "day": 13,
+      "status": "user_direction_confirmed",
+      "opening_tone": "positive",
+      "primary_tone": "grateful and celebratory",
+      "secondary_tones": ["warm and caring", "reflective and contemplative"],
+      "starting_emotion": "welcoming a new morning",
+      "emotional_destination": "present gratitude",
+      "hardship_intensity": 1,
+      "positive_energy": 3,
+      "application_pattern": "Attend to the present day with gratitude rather than remaining defined by yesterday.",
+      "closing_takeaway": "New mercy and present blessing make today worth receiving."
+    },
+    {
+      "day": 14,
+      "status": "known_copy",
+      "opening_tone": "positive",
+      "primary_tone": "calm and reassuring",
+      "secondary_tones": ["joyful and uplifting"],
+      "starting_emotion": "goodness remains within reach",
+      "emotional_destination": "trustful expectation",
+      "hardship_intensity": 1,
+      "positive_energy": 3,
+      "application_pattern": "Receive joy and peace without requiring certainty about the future.",
+      "closing_takeaway": "The listener can move forward with peace and expectant trust."
+    },
+    {
+      "day": 15,
+      "status": "user_approved",
+      "opening_tone": "hardship-led",
+      "primary_tone": "warm and caring",
+      "secondary_tones": ["reflective and contemplative", "grateful and celebratory"],
+      "starting_emotion": "self-judgment",
+      "emotional_destination": "dignity and gratitude",
+      "hardship_intensity": 2,
+      "positive_energy": 3,
+      "application_pattern": "Receive personal dignity and extend the same care to others.",
+      "closing_takeaway": "There is goodness in the life given and grace for the person becoming."
+    },
+    {
+      "day": 16,
+      "status": "revised_generated",
+      "opening_tone": "hardship-led",
+      "primary_tone": "warm and caring",
+      "secondary_tones": ["calm and reassuring", "courageous and strengthening"],
+      "starting_emotion": "discouragement",
+      "emotional_destination": "steadiness and courage",
+      "hardship_intensity": 2,
+      "positive_energy": 3,
+      "application_pattern": "Remember God's song of love when discouragement becomes loud.",
+      "closing_takeaway": "Love is speaking, calming, and calling the listener forward."
+    },
+    {
+      "day": 17,
+      "status": "revised_generated",
+      "opening_tone": "positive",
+      "primary_tone": "warm and caring",
+      "secondary_tones": ["practical and grounding", "calm and reassuring"],
+      "starting_emotion": "confidence in being cared for",
+      "emotional_destination": "peaceful agency",
+      "hardship_intensity": 1,
+      "positive_energy": 3,
+      "application_pattern": "Take the action that belongs to today and entrust the outcome to Jesus.",
+      "closing_takeaway": "Being cared for can steady thoughts and brighten the next steps.",
+      "rejected_opening_pattern": "Beginning immediately with worry, mental strain, or the mind running ahead."
+    }
+  ]
+}

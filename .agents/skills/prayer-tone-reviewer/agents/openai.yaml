@@ -1,0 +1,4 @@
+interface:
+  display_name: "WWJS Prayer Tone Reviewer"
+  short_description: "Balance tone and emotional movement in WWJS prayers"
+  default_prompt: "Use $prayer-tone-reviewer to set and review the emotional tone of this WWJS prayer."

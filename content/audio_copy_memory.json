@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "purpose": "Prevent WWJS prayers from repeating memorable language, emotional setups, opening structures, and routes into Scripture.",
+  "maintenance": {
+    "read_before_every_numbered_prayer": true,
+    "compare_spoken_words_through_scripture_intro": 90,
+    "recent_day_priority_window": 14,
+    "record_generated_copy": true,
+    "record_user_approved_copy": true,
+    "preserve_rejected_copy": true
+  },
+  "production_formatting": {
+    "enclosing_quotation_marks": false,
+    "guidance": "Never wrap Scripture, response prayers, repeated phrases, or other spoken text in quotation marks because they can slow down or distort ElevenLabs delivery. Preserve apostrophes within ordinary words. Keep Scripture distinct through its spoken introduction and paragraph separation."
+  },
+  "opening_requirements": [
+    "Connect specifically to the day's Scripture and theme.",
+    "Settle the listener through fresh language rather than a repeated formula.",
+    "Create a clear emotional movement before the Scripture introduction.",
+    "Vary the first verb, sentence shape, central image, and transition into Scripture.",
+    "Keep the required breath cadence when used, but vary everything surrounding it."
+  ],
+  "opening_tone_balance": {
+    "guidance": "Maintain a healthy mixture of positive, balanced, contemplative, and hardship-led openings. Do not automatically lead with struggle when the passage offers a credible positive promise.",
+    "maximum_consecutive_hardship_led_openings": 2,
+    "record_tone_for_each_new_day": true
+  },
+  "overused_language": [
+    {
+      "pattern": "As we begin this prayer",
+      "guidance": "Do not reuse as an opening template."
+    },
+    {
+      "pattern": "I am here with you",
+      "guidance": "Heavily used. Express presence through a passage-specific image instead."
+    },
+    {
+      "pattern": "You do not need to",
+      "guidance": "Heavily used as opening reassurance. Avoid beginning nearby prayers with a list of things the listener does not need to do."
+    },
+    {
+      "pattern": "Let your shoulders soften",
+      "guidance": "Heavily used body-settling cue. Rotate with still hands, grounded feet, unclenched hands, attentive listening, or no body cue."
+    },
+    {
+      "pattern": "Release the pressure to prove yourself",
+      "guidance": "Already central to earlier prayers. Do not reuse as a pre-Scripture movement."
+    },
+    {
+      "pattern": "welcome in my presence",
+      "guidance": "Avoid as generic opening reassurance unless the passage specifically centers welcome or belonging."
+    }
+  ],
+  "days": [
+    {
+      "day": 1,
+      "status": "confirmed",
+      "opening": "As we begin this prayer, quiet your heart and become fully present with me.",
+      "pre_scripture_movements": [
+        "Jesus is present with the listener.",
+        "The listener does not need to hide weariness or appear strong.",
+        "Shoulders soften and inner noise becomes quiet.",
+        "Nothing needs to be solved before Scripture."
+      ],
+      "avoid_near_repetition": [
+        "quiet your heart",
+        "fully present with me",
+        "hide your weariness",
+        "pretend to be stronger",
+        "nothing you need to solve right now"
+      ]
+    },
+    {
+      "day": 6,
+      "status": "confirmed",
+      "opening": "As we begin this prayer, quiet your heart and open yourself to love.",
+      "pre_scripture_movements": [
+        "Jesus is present with the listener.",
+        "Shoulders soften before a guided breath.",
+        "The listener releases pressure to prove themselves.",
+        "Love begins by drawing close to Jesus."
+      ],
+      "avoid_near_repetition": [
+        "open yourself to love",
+        "release the pressure to prove yourself",
+        "love begins by drawing close to me"
+      ]
+    },
+    {
+      "day": 13,
+      "status": "confirmed_fragment",
+      "opening_image": "A new day carrying new mercy.",
+      "avoid_near_repetition": [
+        "today is here",
+        "carrying new mercy",
+        "yesterday has passed"
+      ]
+    },
+    {
+      "day": 14,
+      "status": "generated",
+      "opening": "Come close, and let this moment remind you that goodness is still within reach.",
+      "pre_scripture_movements": [
+        "The future is unknown but the listener can rest without every answer.",
+        "Shoulders soften before a guided breath.",
+        "The listener releases the need to predict the future and receives present grace."
+      ],
+      "avoid_near_repetition": [
+        "goodness is still within reach",
+        "you may not know what comes next",
+        "without having every answer",
+        "release the need to predict the future"
+      ]
+    },
+    {
+      "day": 15,
+      "status": "approved",
+      "opening": "Set down every judgment you have carried about yourself, and let me meet you with love.",
+      "cadence_reference": ".agents/skills/audio-copywriter/references/approved-day-15-cadence.md",
+      "pre_scripture_movements": [
+        "The listener releases self-judgment and comparison.",
+        "Jesus sees the listener fully.",
+        "Shoulders soften before a guided breath.",
+        "Harsh self-talk gives way to gratitude and truth."
+      ],
+      "avoid_near_repetition": [
+        "set down every judgment",
+        "prove that you are worthy",
+        "fully seen",
+        "harsh words you have spoken over yourself",
+        "make room for gratitude and truth"
+      ]
+    },
+    {
+      "day": 16,
+      "status": "revised_generated_reduced_breaks",
+      "rejected_opening": "Turn your attention toward me, and let this prayer begin with a truth you do not have to earn. You are loved.",
+      "rejected_pre_scripture_language": [
+        "You do not need to impress me, hide your weakness, or arrive with perfect faith.",
+        "I am here, and you are welcome in my presence.",
+        "Release the pressure to prove yourself. Allow yourself to receive love instead."
+      ],
+      "reason": "The user identified this as too similar to reassurance, presence, and proving language already used in earlier prayers.",
+      "revised_opening": "Bring me the part of your heart worn down by discouragement.",
+      "revised_pre_scripture_movements": [
+        "Fear and uncertainty are named as loud voices that do not have the final word.",
+        "The listener settles with resting hands before a guided breath.",
+        "The prayer turns toward the passage-specific sound of God's faithful love singing."
+      ],
+      "avoid_near_repetition": [
+        "part of your heart worn down by discouragement",
+        "neither has the final word",
+        "song of my faithful love",
+        "listen for my song beneath the noise"
+      ],
+      "cadence_feedback": [
+        "The generated voice did not maintain a fluid or consistent pace.",
+        "The script used too many explicit break tags and too many isolated short sentences.",
+        "Revise with fewer SSML breaks, smoother sentence clusters, and punctuation carrying more of the ordinary cadence."
+      ],
+      "rejected_application_language": [
+        "Let yourself receive one good moment without questioning whether you deserve it.",
+        "Notice a friend's kindness, sunlight through a window, laughter, music, or the relief of a task completed.",
+        "Welcome that gift with gratitude."
+      ],
+      "application_feedback": "The notice-an-ordinary-good-thing and welcome-it-with-gratitude movement repeated recent prayers and must not be reused.",
+      "current_application": "When discouragement becomes loud, remember the song described by Zephaniah and return to the truth that God's love is near, calming, and stronger than fear.",
+      "ssml_break_count": 13
+    },
+    {
+      "day": 17,
+      "status": "revised_generated",
+      "opening_tone": "positive",
+      "rejected_opening": "Let me meet you before your mind runs any farther ahead.",
+      "rejected_opening_reason": "The opening led immediately with worry and mental strain. The user wanted a healthier sequence-wide balance, with some prayers beginning positively even when they later acknowledge hardship.",
+      "opening": "Begin this prayer with confidence, you are deeply cared for.",
+      "pre_scripture_movements": [
+        "The listener begins from the positive promise that they are deeply cared for.",
+        "Jesus' care is connected to valued relationships, meaningful work, and unanswered questions.",
+        "The listener rests with open hands, chooses one concern, and brings it gently into prayer."
+      ],
+      "application": "Separate the responsible action that belongs to today from the outcome that remains beyond the listener's control, then entrust the outcome to Jesus.",
+      "avoid_near_repetition": [
+        "begin this prayer with confidence",
+        "you are deeply cared for",
+        "today can be met with trust",
+        "take the part that belongs to today",
+        "worry begins writing tomorrow's story"
+      ],
+      "ssml_break_count": 13,
+      "spoken_word_count": 368,
+      "enclosing_quotation_marks": false
+    }
+  ]
+}
