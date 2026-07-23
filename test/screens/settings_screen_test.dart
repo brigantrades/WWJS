@@ -29,6 +29,10 @@ void main() {
     expect(find.text('Daily reminder'), findsOneWidget);
     expect(find.text('Current prayer day'), findsNothing);
     expect(find.byType(DropdownButton<ThemeMode>), findsNothing);
+    expect(find.text('TESTING'), findsNothing);
+    expect(find.text('Show paywall'), findsNothing);
+    expect(find.text('Show update modal'), findsNothing);
+    expect(find.text('Reset local progress'), findsNothing);
   });
 
   testWidgets('dark settings retains its separate design', (tester) async {
@@ -81,6 +85,10 @@ void main() {
     expect(find.text('Privacy'), findsOneWidget);
     expect(find.text('Rate the App'), findsOneWidget);
     expect(find.text('Send Feedback'), findsOneWidget);
+    expect(find.text('TESTING'), findsNothing);
+    expect(find.text('Show paywall'), findsNothing);
+    expect(find.text('Show update modal'), findsNothing);
+    expect(find.text('Reset local progress'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

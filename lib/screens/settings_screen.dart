@@ -9,9 +9,7 @@ import '../core/app_theme.dart';
 import '../core/formatters.dart';
 import '../services/app_update_service.dart';
 import '../state/app_controller.dart';
-import '../widgets/subscription_modal.dart';
 import '../widgets/tablet_artwork_background.dart';
-import '../widgets/update_modal.dart';
 import 'commitment_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -137,28 +135,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showTestUpdateModal(BuildContext context) async {
-    final action = await showUpdateModal(context);
-    if (action != UpdateModalAction.update || !context.mounted) return;
-
-    final service = updateService;
-    if (service == null) return;
-    try {
-      final opened = await service.openConfiguredStore();
-      if (!opened && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open the update page.')),
-        );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open the update page.')),
-        );
-      }
-    }
-  }
-
   Future<void> _chooseCurrentDay(BuildContext context) async {
     final selected = await showDialog<int>(
       context: context,
@@ -180,29 +156,6 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
     if (selected != null) await controller.setCurrentDay(selected);
-  }
-
-  Future<void> _confirmReset(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset local progress?'),
-        content: const Text(
-          'This removes completed prayers, favorites, reminders, and saved progress from this device. You’ll return to Day 1 unless you choose a different starting day during setup. It cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) await controller.reset();
   }
 
   Future<void> _chooseTheme(BuildContext context) async {
@@ -411,38 +364,6 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const _LightSectionLabel(text: 'TESTING'),
-                      _LightSettingsCard(
-                        children: [
-                          _LightSettingsRow(
-                            icon: Icons.payments_outlined,
-                            title: 'Show paywall',
-                            compact: true,
-                            onTap: () => showSubscriptionModal(
-                              context,
-                              subscriptionService:
-                                  controller.subscriptionService,
-                            ),
-                          ),
-                          const _LightSettingsDivider(),
-                          _LightSettingsRow(
-                            icon: Icons.system_update_alt_rounded,
-                            title: 'Show update modal',
-                            compact: true,
-                            onTap: () => _showTestUpdateModal(context),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                          minimumSize: const Size.fromHeight(52),
-                        ),
-                        onPressed: () => _confirmReset(context),
-                        icon: const Icon(Icons.restart_alt_rounded),
-                        label: const Text('Reset local progress'),
-                      ),
                     ]),
                   ),
                 ),
@@ -624,38 +545,6 @@ class SettingsScreen extends StatelessWidget {
                             onTap: () => _showAppInformation(context),
                           ),
                         ],
-                      ),
-                      const _DarkSectionLabel(text: 'TESTING'),
-                      _DarkSettingsCard(
-                        children: [
-                          _DarkSettingsRow(
-                            icon: Icons.payments_outlined,
-                            title: 'Show paywall',
-                            compact: true,
-                            onTap: () => showSubscriptionModal(
-                              context,
-                              subscriptionService:
-                                  controller.subscriptionService,
-                            ),
-                          ),
-                          const _DarkSettingsDivider(),
-                          _DarkSettingsRow(
-                            icon: Icons.system_update_alt_rounded,
-                            title: 'Show update modal',
-                            compact: true,
-                            onTap: () => _showTestUpdateModal(context),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                          minimumSize: const Size.fromHeight(52),
-                        ),
-                        onPressed: () => _confirmReset(context),
-                        icon: const Icon(Icons.restart_alt_rounded),
-                        label: const Text('Reset local progress'),
                       ),
                     ]),
                   ),
