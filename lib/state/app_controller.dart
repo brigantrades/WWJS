@@ -14,6 +14,7 @@ import '../services/subscription_service.dart';
 
 class AppController extends ChangeNotifier {
   static const freeDayLimit = 7;
+  static const _completionBasedJourneyVersion = 2;
 
   AppController({
     AppStorage? storage,
@@ -107,6 +108,9 @@ class AppController extends ChangeNotifier {
     themeMode = snapshot.themeMode;
     textScale = snapshot.textScale;
 
+    if (snapshot.journeyProgressionVersion < _completionBasedJourneyVersion) {
+      await _migrateToCompletionBasedJourney();
+    }
     await _syncJourneyProgress();
     await _activityStore.recordAppLaunch();
     _foregroundStartedAt = _now();
@@ -177,16 +181,11 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> markCompleted(int day) async {
-    final firstCompletion = !completed.contains(day);
-    completed.add(day);
+    final journeyChanged = await _markPrayerStarted(day);
     positions[day] = Duration.zero;
-    notifyListeners();
-    await _storage.saveCompleted(completed);
+    if (!journeyChanged) notifyListeners();
     await _storage.savePositions(positions);
-    await _activityStore.recordPrayerCompleted(
-      day,
-      firstCompletion: firstCompletion,
-    );
+    await _activityStore.recordPrayerCompleted(day);
   }
 
   Future<void> savePosition(int day, Duration position) async {
@@ -244,8 +243,10 @@ class AppController extends ChangeNotifier {
   Future<void> recordPrayerOpened(int day, {required bool resumed}) =>
       _activityStore.recordPrayerOpened(day, resumed: resumed);
 
-  Future<void> recordPrayerPlaybackStarted(int day) =>
-      _activityStore.recordPrayerPlaybackStarted(day);
+  Future<void> recordPrayerPlaybackStarted(int day) async {
+    await _markPrayerStarted(day);
+    await _activityStore.recordPrayerPlaybackStarted(day);
+  }
 
   Future<void> recordPrayerAbandoned(
     int day, {
@@ -272,36 +273,82 @@ class AppController extends ChangeNotifier {
   }
 
   Future<bool> _syncJourneyProgress() async {
-    if (!onboardingComplete || startDate == null || prayers.isEmpty) {
+    if (!onboardingComplete || prayers.isEmpty) {
       return false;
     }
 
-    final unlockedDay = calculateUnlockedDay(
-      startDate: startDate!,
-      today: _now(),
-      previousHighest: highestUnlockedDay,
-      contentCount: prayers.length,
-    );
-    final unlockedChanged = unlockedDay != highestUnlockedDay;
-    highestUnlockedDay = unlockedDay;
+    if (highestUnlockedDay < 1) {
+      highestUnlockedDay = 1;
+      await _storage.saveHighestUnlocked(highestUnlockedDay);
+      return true;
+    }
+    return false;
+  }
 
-    final completedCount = completed.length;
-    completed.addAll(
-      prayers
-          .take((unlockedDay - 1).clamp(0, prayers.length))
-          .map((prayer) => prayer.day),
-    );
-    final completedChanged = completed.length != completedCount;
+  Future<bool> _markPrayerStarted(int day) async {
+    final firstStart = completed.add(day);
+    final unlocksNext =
+        day == highestUnlockedDay && highestUnlockedDay < prayers.length;
+    if (unlocksNext) highestUnlockedDay += 1;
+    if (!firstStart && !unlocksNext) return false;
 
     final writes = <Future<void>>[];
-    if (unlockedChanged) {
+    if (firstStart) writes.add(_storage.saveCompleted(completed));
+    if (unlocksNext) {
       writes.add(_storage.saveHighestUnlocked(highestUnlockedDay));
     }
-    if (completedChanged) {
-      writes.add(_storage.saveCompleted(completed));
-    }
+    notifyListeners();
     await Future.wait(writes);
-    return unlockedChanged || completedChanged;
+    if (unlocksNext) unawaited(preloadTodayAudio());
+    return true;
+  }
+
+  Future<void> _migrateToCompletionBasedJourney() async {
+    if (onboardingComplete) {
+      final history = await _activityStore.load();
+      final startedMetrics =
+          history.lifetimePrayerMetrics[LocalActivityMetric
+              .prayerPlaybackStarted
+              .key] ??
+          const <String, int>{};
+      final startedDays = startedMetrics.entries
+          .where((entry) => entry.value > 0)
+          .map((entry) => int.tryParse(entry.key))
+          .whereType<int>()
+          .where((day) => day > 0)
+          .toSet();
+
+      final selectedDayWasExplicit =
+          history.prayerTotal(
+                LocalActivityMetric.journeyDayChanged,
+                prayerDay: highestUnlockedDay,
+              ) >
+              0 ||
+          history.prayerTotal(
+                LocalActivityMetric.startingDaySelected,
+                prayerDay: highestUnlockedDay,
+              ) >
+              0;
+      final nextStartedDay = startedDays.isEmpty
+          ? 1
+          : startedDays.reduce(
+                  (first, second) => first > second ? first : second,
+                ) +
+                1;
+      highestUnlockedDay = selectedDayWasExplicit
+          ? (highestUnlockedDay > nextStartedDay
+                ? highestUnlockedDay
+                : nextStartedDay)
+          : nextStartedDay;
+      completed = startedDays;
+      await Future.wait([
+        _storage.saveHighestUnlocked(highestUnlockedDay),
+        _storage.saveCompleted(completed),
+      ]);
+    }
+    await _storage.saveJourneyProgressionVersion(
+      _completionBasedJourneyVersion,
+    );
   }
 
   Future<void> recordAppBackgrounded() async {

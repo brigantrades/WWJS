@@ -7,20 +7,6 @@ int calendarDayDifference(DateTime from, DateTime to) {
   return toUtc.difference(fromUtc).inDays;
 }
 
-int calculateUnlockedDay({
-  required DateTime startDate,
-  required DateTime today,
-  required int previousHighest,
-  required int contentCount,
-}) {
-  if (contentCount <= 0) return 0;
-  final elapsed = calendarDayDifference(startDate, today);
-  final candidate = (elapsed + 1).clamp(1, contentCount);
-  return candidate > previousHighest
-      ? candidate
-      : previousHighest.clamp(1, contentCount);
-}
-
 String encodeLocalDay(DateTime value) {
   final day = localDay(value);
   return '${day.year.toString().padLeft(4, '0')}-'

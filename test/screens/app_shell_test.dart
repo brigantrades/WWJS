@@ -135,7 +135,7 @@ void main() {
     await tester.pumpWidget(WWJSApp(controller: controller));
 
     expect(controller.requiresSubscription, isFalse);
-    expect(find.text('Day 9'), findsOneWidget);
+    expect(find.text('Day 8'), findsOneWidget);
     expect(find.text('Day 7'), findsNothing);
     expect(find.byKey(const Key('upgrade-prompt')), findsNothing);
   });

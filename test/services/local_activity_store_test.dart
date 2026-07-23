@@ -13,8 +13,8 @@ void main() {
     await store.recordScreenView(LocalActivityScreen.today);
     await store.recordPrayerOpened(3, resumed: true);
     await store.recordPrayerPlaybackStarted(3);
-    await store.recordPrayerCompleted(3, firstCompletion: true);
-    await store.recordPrayerCompleted(3, firstCompletion: false);
+    await store.recordPrayerCompleted(3);
+    await store.recordPrayerCompleted(3);
     await store.recordPrayerAbandoned(
       4,
       progressPercent: 61,
@@ -119,12 +119,12 @@ void main() {
     var now = DateTime(2026, 7, 1);
     final store = LocalActivityStore(now: () => now);
 
-    await store.recordPrayerCompleted(1, firstCompletion: true);
-    await store.recordPrayerCompleted(1, firstCompletion: false);
+    await store.recordPrayerCompleted(1);
+    await store.recordPrayerCompleted(1);
     now = DateTime(2026, 7, 2);
-    await store.recordPrayerCompleted(2, firstCompletion: true);
+    await store.recordPrayerCompleted(2);
     now = DateTime(2026, 7, 4);
-    await store.recordPrayerCompleted(3, firstCompletion: true);
+    await store.recordPrayerCompleted(3);
 
     final history = await store.load();
     expect(history.lastPrayerCompletionLocalDay, '2026-07-04');

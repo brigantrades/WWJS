@@ -52,6 +52,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   int _lastSavedSecond = -1;
   bool _hasRecordedPlaybackStart = false;
   bool _hasRecordedAbandonment = false;
+  late final bool _wasCompletedOnOpen;
   DateTime? _listeningStartedAt;
   Duration _listeningDuration = Duration.zero;
 
@@ -60,6 +61,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     super.initState();
     _ownsAudioSession = widget.controller.audioSession == null;
     _audioSession = widget.controller.audioSession ?? PrayerAudioSession();
+    _wasCompletedOnOpen = widget.controller.completed.contains(
+      widget.prayer.day,
+    );
     _position = widget.controller.positions[widget.prayer.day] ?? Duration.zero;
     _duration = widget.prayer.estimatedDuration;
     unawaited(
@@ -141,9 +145,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _complete() async {
     if (_didComplete || _completionInProgress) return;
     _completionInProgress = true;
-    final wasAlreadyCompleted = widget.controller.completed.contains(
-      widget.prayer.day,
-    );
+    final wasAlreadyCompleted = _wasCompletedOnOpen;
     try {
       await _player.pause();
       _updateListeningState(false);

@@ -228,6 +228,7 @@ void main() {
     await controller.initialize();
     await controller.finishOnboarding();
     await controller.markCompleted(1);
+    await controller.setCurrentDay(1);
 
     await tester.pumpWidget(
       MaterialApp(home: TodayScreen(controller: controller)),

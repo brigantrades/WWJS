@@ -59,10 +59,10 @@ void main() {
       now: () => DateTime(2026, 7, 12),
     );
     await restored.initialize();
-    expect(restored.highestUnlockedDay, 3);
+    expect(restored.highestUnlockedDay, 2);
   });
 
-  test('skipped calendar days become completed and today advances', () async {
+  test('skipped calendar days do not advance the journey', () async {
     SharedPreferences.setMockInitialValues({});
     var now = DateTime(2026, 7, 11, 8);
     const contentRepository = _TenDayContentRepository();
@@ -78,10 +78,9 @@ void main() {
     await controller.recordAppBackgrounded();
     await controller.recordAppResumed();
 
-    expect(controller.todaysPrayer.day, 3);
-    expect(controller.highestUnlockedDay, 3);
-    expect(controller.completed, containsAll(<int>[1, 2]));
-    expect(controller.completed, isNot(contains(3)));
+    expect(controller.todaysPrayer.day, 1);
+    expect(controller.highestUnlockedDay, 1);
+    expect(controller.completed, isEmpty);
 
     final restored = AppController(
       reminders: NoopReminderScheduler(),
@@ -89,9 +88,55 @@ void main() {
       contentRepository: contentRepository,
     );
     await restored.initialize();
-    expect(restored.todaysPrayer.day, 3);
-    expect(restored.completed, containsAll(<int>[1, 2]));
+    expect(restored.todaysPrayer.day, 1);
+    expect(restored.completed, isEmpty);
   });
+
+  test('starting a prayer completes it and advances the journey', () async {
+    SharedPreferences.setMockInitialValues({});
+    const contentRepository = _TenDayContentRepository();
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      contentRepository: contentRepository,
+    );
+    await controller.initialize();
+    await controller.finishOnboarding();
+
+    await controller.recordPrayerPlaybackStarted(1);
+
+    expect(controller.completed, contains(1));
+    expect(controller.highestUnlockedDay, 2);
+    expect(controller.todaysPrayer.day, 2);
+
+    await controller.recordPrayerPlaybackStarted(1);
+    expect(controller.highestUnlockedDay, 2);
+  });
+
+  test(
+    'migrates calendar-skipped progress to prayers actually started',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'onboarding_complete': true,
+        'start_date': '2026-07-01',
+        'highest_unlocked': 8,
+        'completed': [for (var day = 1; day <= 7; day++) '$day'],
+      });
+      final activityStore = LocalActivityStore(now: () => DateTime(2026, 7, 8));
+      await activityStore.recordPrayerPlaybackStarted(1);
+
+      final controller = AppController(
+        reminders: NoopReminderScheduler(),
+        now: () => DateTime(2026, 7, 8),
+        contentRepository: const _TenDayContentRepository(),
+        activityStore: activityStore,
+      );
+      await controller.initialize();
+
+      expect(controller.highestUnlockedDay, 2);
+      expect(controller.todaysPrayer.day, 2);
+      expect(controller.completed, {1});
+    },
+  );
 
   test('keeps Day 7 current after free access is completed', () async {
     SharedPreferences.setMockInitialValues({});
@@ -112,13 +157,13 @@ void main() {
     );
     await restored.initialize();
 
-    expect(restored.highestUnlockedDay, 10);
+    expect(restored.highestUnlockedDay, 8);
     expect(restored.highestAccessibleDay, 7);
     expect(restored.todaysPrayer.day, 7);
     expect(restored.unlockedPrayers.last.day, 7);
   });
 
-  test('active subscription resumes daily progression beyond Day 7', () async {
+  test('active subscription continues progression beyond Day 7', () async {
     SharedPreferences.setMockInitialValues({});
     const contentRepository = _TenDayContentRepository();
     final first = AppController(
@@ -138,8 +183,8 @@ void main() {
     );
     await restored.initialize();
 
-    expect(restored.highestAccessibleDay, 10);
-    expect(restored.todaysPrayer.day, 10);
+    expect(restored.highestAccessibleDay, 8);
+    expect(restored.todaysPrayer.day, 8);
     expect(restored.requiresSubscription, isFalse);
     restored.dispose();
   });

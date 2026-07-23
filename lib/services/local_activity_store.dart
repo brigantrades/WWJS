@@ -262,10 +262,13 @@ class LocalActivityStore {
   Future<void> recordPrayerPlaybackStarted(int dayNumber) =>
       _recordPrayer(LocalActivityMetric.prayerPlaybackStarted, dayNumber);
 
-  Future<void> recordPrayerCompleted(
-    int dayNumber, {
-    required bool firstCompletion,
-  }) => _mutate((history, day) {
+  Future<void> recordPrayerCompleted(int dayNumber) => _mutate((history, day) {
+    final firstCompletion =
+        history.prayerTotal(
+          LocalActivityMetric.prayerCompleted,
+          prayerDay: dayNumber,
+        ) ==
+        0;
     _markPrayerCompletionDay(history, localDay(_now()));
     for (final metric in [
       LocalActivityMetric.prayerCompleted,

@@ -10,6 +10,7 @@ class AppSnapshot {
     required this.onboardingComplete,
     required this.startDate,
     required this.highestUnlockedDay,
+    required this.journeyProgressionVersion,
     required this.favorites,
     required this.completed,
     required this.positions,
@@ -22,6 +23,7 @@ class AppSnapshot {
   final bool onboardingComplete;
   final DateTime? startDate;
   final int highestUnlockedDay;
+  final int journeyProgressionVersion;
   final Set<int> favorites;
   final Set<int> completed;
   final Map<int, Duration> positions;
@@ -35,6 +37,7 @@ class AppStorage {
   static const _onboarding = 'onboarding_complete';
   static const _startDate = 'start_date';
   static const _highestUnlocked = 'highest_unlocked';
+  static const _journeyProgressionVersion = 'journey_progression_version';
   static const _favorites = 'favorites';
   static const _completed = 'completed';
   static const _positions = 'positions';
@@ -61,6 +64,7 @@ class AppStorage {
       onboardingComplete: prefs.getBool(_onboarding) ?? false,
       startDate: decodeLocalDay(prefs.getString(_startDate)),
       highestUnlockedDay: prefs.getInt(_highestUnlocked) ?? 1,
+      journeyProgressionVersion: prefs.getInt(_journeyProgressionVersion) ?? 1,
       favorites: (prefs.getStringList(_favorites) ?? const [])
           .map(int.parse)
           .toSet(),
@@ -89,6 +93,10 @@ class AppStorage {
 
   Future<void> saveHighestUnlocked(int day) async {
     await (await _prefs).setInt(_highestUnlocked, day);
+  }
+
+  Future<void> saveJourneyProgressionVersion(int version) async {
+    await (await _prefs).setInt(_journeyProgressionVersion, version);
   }
 
   Future<void> saveFavorites(Set<int> days) async {
@@ -135,6 +143,7 @@ class AppStorage {
       _onboarding,
       _startDate,
       _highestUnlocked,
+      _journeyProgressionVersion,
       _favorites,
       _completed,
       _positions,
