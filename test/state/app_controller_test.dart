@@ -92,11 +92,13 @@ void main() {
     expect(restored.completed, isEmpty);
   });
 
-  test('starting a prayer completes it and advances the journey', () async {
+  test('starting a prayer advances only after the next midnight', () async {
     SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 11, 8);
     const contentRepository = _TenDayContentRepository();
     final controller = AppController(
       reminders: NoopReminderScheduler(),
+      now: () => now,
       contentRepository: contentRepository,
     );
     await controller.initialize();
@@ -105,11 +107,24 @@ void main() {
     await controller.recordPrayerPlaybackStarted(1);
 
     expect(controller.completed, contains(1));
+    expect(controller.highestUnlockedDay, 1);
+    expect(controller.todaysPrayer.day, 1);
+
+    now = DateTime(2026, 7, 12, 0, 1);
+    await controller.recordAppBackgrounded();
+    await controller.recordAppResumed();
     expect(controller.highestUnlockedDay, 2);
     expect(controller.todaysPrayer.day, 2);
 
-    await controller.recordPrayerPlaybackStarted(1);
+    await controller.recordPrayerPlaybackStarted(2);
     expect(controller.highestUnlockedDay, 2);
+    expect(controller.todaysPrayer.day, 2);
+
+    now = DateTime(2026, 7, 19, 8);
+    await controller.recordAppBackgrounded();
+    await controller.recordAppResumed();
+    expect(controller.highestUnlockedDay, 3);
+    expect(controller.todaysPrayer.day, 3);
   });
 
   test(
@@ -132,11 +147,37 @@ void main() {
       );
       await controller.initialize();
 
-      expect(controller.highestUnlockedDay, 2);
-      expect(controller.todaysPrayer.day, 2);
+      expect(controller.highestUnlockedDay, 1);
+      expect(controller.todaysPrayer.day, 1);
       expect(controller.completed, {1});
     },
   );
+
+  test('migration keeps a same-day completed prayer current', () async {
+    SharedPreferences.setMockInitialValues({
+      'onboarding_complete': true,
+      'start_date': '2026-07-11',
+      'highest_unlocked': 2,
+      'journey_progression_version': 2,
+      'completed': ['1'],
+    });
+    final activityStore = LocalActivityStore(
+      now: () => DateTime(2026, 7, 11, 8),
+    );
+    await activityStore.recordPrayerPlaybackStarted(1);
+
+    final controller = AppController(
+      reminders: NoopReminderScheduler(),
+      now: () => DateTime(2026, 7, 11, 9),
+      contentRepository: const _TenDayContentRepository(),
+      activityStore: activityStore,
+    );
+    await controller.initialize();
+
+    expect(controller.highestUnlockedDay, 1);
+    expect(controller.todaysPrayer.day, 1);
+    expect(controller.completed, {1});
+  });
 
   test('keeps Day 7 current after free access is completed', () async {
     SharedPreferences.setMockInitialValues({});

@@ -14,7 +14,7 @@ import '../services/subscription_service.dart';
 
 class AppController extends ChangeNotifier {
   static const freeDayLimit = 7;
-  static const _completionBasedJourneyVersion = 2;
+  static const _completionBasedJourneyVersion = 3;
 
   AppController({
     AppStorage? storage,
@@ -53,6 +53,7 @@ class AppController extends ChangeNotifier {
   int highestUnlockedDay = 1;
   Set<int> favorites = {};
   Set<int> completed = {};
+  Map<int, DateTime> completedOn = {};
   Map<int, Duration> positions = {};
   bool reminderEnabled = false;
   TimeOfDay reminderTime = const TimeOfDay(hour: 7, minute: 30);
@@ -102,6 +103,7 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = snapshot.highestUnlockedDay;
     favorites = snapshot.favorites;
     completed = snapshot.completed;
+    completedOn = snapshot.completedOn;
     positions = snapshot.positions;
     reminderEnabled = snapshot.reminderEnabled;
     reminderTime = snapshot.reminderTime;
@@ -109,7 +111,9 @@ class AppController extends ChangeNotifier {
     textScale = snapshot.textScale;
 
     if (snapshot.journeyProgressionVersion < _completionBasedJourneyVersion) {
-      await _migrateToCompletionBasedJourney();
+      await _migrateToCompletionBasedJourney(
+        snapshot.journeyProgressionVersion,
+      );
     }
     await _syncJourneyProgress();
     await _activityStore.recordAppLaunch();
@@ -277,33 +281,51 @@ class AppController extends ChangeNotifier {
       return false;
     }
 
+    var changed = false;
     if (highestUnlockedDay < 1) {
       highestUnlockedDay = 1;
-      await _storage.saveHighestUnlocked(highestUnlockedDay);
-      return true;
+      changed = true;
     }
-    return false;
+
+    final today = localDay(_now());
+    while (highestUnlockedDay < prayers.length &&
+        completed.contains(highestUnlockedDay)) {
+      final completionDate = completedOn[highestUnlockedDay];
+      if (completionDate == null ||
+          calendarDayDifference(completionDate, today) < 1) {
+        break;
+      }
+      highestUnlockedDay += 1;
+      changed = true;
+    }
+
+    if (changed) {
+      await _storage.saveHighestUnlocked(highestUnlockedDay);
+    }
+    return changed;
   }
 
   Future<bool> _markPrayerStarted(int day) async {
     final firstStart = completed.add(day);
-    final unlocksNext =
-        day == highestUnlockedDay && highestUnlockedDay < prayers.length;
-    if (unlocksNext) highestUnlockedDay += 1;
-    if (!firstStart && !unlocksNext) return false;
+    final needsCompletionDate = !completedOn.containsKey(day);
+    if (needsCompletionDate) completedOn[day] = localDay(_now());
 
     final writes = <Future<void>>[];
     if (firstStart) writes.add(_storage.saveCompleted(completed));
-    if (unlocksNext) {
-      writes.add(_storage.saveHighestUnlocked(highestUnlockedDay));
+    if (needsCompletionDate) {
+      writes.add(_storage.saveCompletedOn(completedOn));
     }
-    notifyListeners();
     await Future.wait(writes);
-    if (unlocksNext) unawaited(preloadTodayAudio());
-    return true;
+    final journeyChanged = await _syncJourneyProgress();
+    final changed = firstStart || needsCompletionDate || journeyChanged;
+    if (changed) {
+      notifyListeners();
+      if (journeyChanged) unawaited(preloadTodayAudio());
+    }
+    return changed;
   }
 
-  Future<void> _migrateToCompletionBasedJourney() async {
+  Future<void> _migrateToCompletionBasedJourney(int previousVersion) async {
     if (onboardingComplete) {
       final history = await _activityStore.load();
       final startedMetrics =
@@ -317,6 +339,30 @@ class AppController extends ChangeNotifier {
           .whereType<int>()
           .where((day) => day > 0)
           .toSet();
+      if (previousVersion >= 2) startedDays.addAll(completed);
+
+      final migratedCompletedOn = <int, DateTime>{};
+      final historyDays = history.days.entries.toList()
+        ..sort((first, second) => first.key.compareTo(second.key));
+      for (final historyDay in historyDays) {
+        final date = decodeLocalDay(historyDay.key);
+        if (date == null) continue;
+        final playbackStarts =
+            historyDay.value.prayerMetrics[LocalActivityMetric
+                .prayerPlaybackStarted
+                .key] ??
+            const <String, int>{};
+        for (final entry in playbackStarts.entries) {
+          final day = int.tryParse(entry.key);
+          if (day != null && day > 0 && entry.value > 0) {
+            migratedCompletedOn.putIfAbsent(day, () => date);
+          }
+        }
+      }
+      final fallbackDate = localDay(_now()).subtract(const Duration(days: 1));
+      for (final day in startedDays) {
+        migratedCompletedOn.putIfAbsent(day, () => fallbackDate);
+      }
 
       final selectedDayWasExplicit =
           history.prayerTotal(
@@ -329,21 +375,22 @@ class AppController extends ChangeNotifier {
                 prayerDay: highestUnlockedDay,
               ) >
               0;
-      final nextStartedDay = startedDays.isEmpty
+      final lastStartedDay = startedDays.isEmpty
           ? 1
           : startedDays.reduce(
-                  (first, second) => first > second ? first : second,
-                ) +
-                1;
+              (first, second) => first > second ? first : second,
+            );
       highestUnlockedDay = selectedDayWasExplicit
-          ? (highestUnlockedDay > nextStartedDay
+          ? (highestUnlockedDay > lastStartedDay
                 ? highestUnlockedDay
-                : nextStartedDay)
-          : nextStartedDay;
+                : lastStartedDay)
+          : lastStartedDay;
       completed = startedDays;
+      completedOn = migratedCompletedOn;
       await Future.wait([
         _storage.saveHighestUnlocked(highestUnlockedDay),
         _storage.saveCompleted(completed),
+        _storage.saveCompletedOn(completedOn),
       ]);
     }
     await _storage.saveJourneyProgressionVersion(
@@ -381,6 +428,7 @@ class AppController extends ChangeNotifier {
     highestUnlockedDay = 1;
     favorites = {};
     completed = {};
+    completedOn = {};
     positions = {};
     reminderEnabled = false;
     reminderTime = const TimeOfDay(hour: 7, minute: 30);

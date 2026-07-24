@@ -201,13 +201,18 @@ void main() {
 
   testWidgets('passed days appear in the Past Prayers section', (tester) async {
     SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 7, 11, 8);
     final controller = AppController(
       reminders: NoopReminderScheduler(),
+      now: () => now,
       contentRepository: const _ThreeDayContentRepository(),
     );
     await controller.initialize();
     await controller.finishOnboarding();
     await controller.recordPrayerPlaybackStarted(1);
+    now = DateTime(2026, 7, 12, 8);
+    await controller.recordAppBackgrounded();
+    await controller.recordAppResumed();
     await controller.recordPrayerPlaybackStarted(2);
 
     await tester.pumpWidget(

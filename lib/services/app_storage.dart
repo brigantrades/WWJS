@@ -13,6 +13,7 @@ class AppSnapshot {
     required this.journeyProgressionVersion,
     required this.favorites,
     required this.completed,
+    required this.completedOn,
     required this.positions,
     required this.reminderEnabled,
     required this.reminderTime,
@@ -26,6 +27,7 @@ class AppSnapshot {
   final int journeyProgressionVersion;
   final Set<int> favorites;
   final Set<int> completed;
+  final Map<int, DateTime> completedOn;
   final Map<int, Duration> positions;
   final bool reminderEnabled;
   final TimeOfDay reminderTime;
@@ -40,6 +42,7 @@ class AppStorage {
   static const _journeyProgressionVersion = 'journey_progression_version';
   static const _favorites = 'favorites';
   static const _completed = 'completed';
+  static const _completedOn = 'completed_on';
   static const _positions = 'positions';
   static const _reminderEnabled = 'reminder_enabled';
   static const _reminderHour = 'reminder_hour';
@@ -59,6 +62,16 @@ class AppStorage {
       (key, value) =>
           MapEntry(int.parse(key), Duration(milliseconds: value as int)),
     );
+    final completedOnJson = prefs.getString(_completedOn);
+    final completedOnDecoded = completedOnJson == null
+        ? <String, dynamic>{}
+        : (jsonDecode(completedOnJson) as Map<String, dynamic>);
+    final completedOn = <int, DateTime>{};
+    for (final entry in completedOnDecoded.entries) {
+      final day = int.tryParse(entry.key);
+      final date = decodeLocalDay(entry.value as String?);
+      if (day != null && date != null) completedOn[day] = date;
+    }
 
     return AppSnapshot(
       onboardingComplete: prefs.getBool(_onboarding) ?? false,
@@ -71,6 +84,7 @@ class AppStorage {
       completed: (prefs.getStringList(_completed) ?? const [])
           .map(int.parse)
           .toSet(),
+      completedOn: completedOn,
       positions: positions,
       reminderEnabled: prefs.getBool(_reminderEnabled) ?? false,
       reminderTime: TimeOfDay(
@@ -113,6 +127,15 @@ class AppStorage {
     );
   }
 
+  Future<void> saveCompletedOn(Map<int, DateTime> dates) async {
+    await (await _prefs).setString(
+      _completedOn,
+      jsonEncode(
+        dates.map((day, date) => MapEntry('$day', encodeLocalDay(date))),
+      ),
+    );
+  }
+
   Future<void> savePositions(Map<int, Duration> positions) async {
     await (await _prefs).setString(
       _positions,
@@ -146,6 +169,7 @@ class AppStorage {
       _journeyProgressionVersion,
       _favorites,
       _completed,
+      _completedOn,
       _positions,
       _reminderEnabled,
       _reminderHour,
